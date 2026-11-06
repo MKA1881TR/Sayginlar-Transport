@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saygınlar Transport - Management</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="box">
+  <h1 class="title"><span class="tr">YÖNETİM <b>KADROSU</b></span><span class="en">MANAGEMENT <b>TEAM</b></span></h1>
+  <p class="subtitle"><span class="tr">"Saygınlar Transport'un birleşik lider ve operasyon ekibi."</span><span class="en">"The unified leadership and operations team of Saygınlar Transport."</span></p>
+  <div class="grid3" id="grid"></div>
+</div>
+<script src="site.js"></script>
+<script>
+var staff=[
+["fa-crown","Mert • 22","ŞİRKET SAHİBİ / KONVOY & ETKİNLİK & SAVE & EĞİTİM MÜDÜRÜ","COMPANY OWNER / CONVOY & EVENT & SAVE & EDUCATION MANAGER"],
+["fa-users","| Halil • Founder |","Kurucu / İnsan Kaynakları Müdürü","Founder / Human Resources Manager"],
+["fa-code","|Emirhan • DCOO|","Operasyonlardan Sorumlu Başkan Yardımcısı / Discord Geliştiricisi","Deputy Chief Operating Officer / Discord Developer"],
+["fa-user-tie","|Emir • DCOO |","Operasyonlardan Sorumlu Başkan Yardımcısı","Deputy Chief Operating Officer"],
+["fa-headset","|Canberk • T. Sup.|","Teknik Destek","Tech Support"],
+["fa-truck","|Yiğit • T.B.S |","Truckers Book Sorumlusu","Truckers Book Supervisor"]];
+document.getElementById('grid').innerHTML=staff.map(function(s){
+ return '<div class="staff"><div class="avatar"><i class="fas '+s[0]+'"></i></div><div class="sname">'+s[1]+'</div><div class="role"><span class="tr">'+s[2]+'</span><span class="en">'+s[3]+'</span></div></div>';}).join('');
+</script></body></html>

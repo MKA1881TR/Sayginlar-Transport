@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saygınlar Transport - Giriş</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="box narrow" style="max-width:460px">
+  <h1 class="title" style="font-size:34px"><span class="tr">HESAP <b>GİRİŞİ</b></span><span class="en">ACCOUNT <b>LOGIN</b></span></h1>
+  <div class="tabs">
+    <button class="btn gray" id="t-login" style="flex:1"><span class="tr">Giriş Yap</span><span class="en">Log in</span></button>
+    <button class="btn gray" id="t-reg" style="flex:1"><span class="tr">Kayıt Ol</span><span class="en">Sign up</span></button>
+  </div>
+  <input type="email" id="email" placeholder="E-posta / Email" autocomplete="email">
+  <input type="password" id="pass" placeholder="Şifre / Password (min 6)" autocomplete="current-password">
+  <button class="btn" id="go" style="width:100%"></button>
+  <p style="text-align:center"><a href="#" id="reset"><span class="tr">Şifremi unuttum</span><span class="en">Forgot password</span></a></p>
+  <div id="msg"></div>
+</div>
+<script src="site.js"></script>
+<script type="module">
+import {auth,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,getRole} from "./fb.js";
+const $=id=>document.getElementById(id); let mode='login';
+function say(t,err){$('msg').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('msg').append(d);}
+function setMode(m){mode=m;$('go').textContent=m==='login'?'GİRİŞ / LOGIN':'KAYIT OL / SIGN UP';
+  $('t-login').style.background=m==='login'?'#cc0000':'#444';$('t-reg').style.background=m==='reg'?'#cc0000':'#444';}
+$('t-login').onclick=()=>setMode('login');$('t-reg').onclick=()=>setMode('reg');setMode('login');
+const errs={'auth/invalid-credential':'E-posta veya şifre hatalı.','auth/email-already-in-use':'Bu e-posta zaten kayıtlı.','auth/weak-password':'Şifre en az 6 karakter olmalı.','auth/invalid-email':'Geçersiz e-posta.','auth/too-many-requests':'Çok fazla deneme, biraz bekle.'};
+$('go').onclick=async()=>{
+  try{
+    const e=$('email').value.trim(),p=$('pass').value;
+    const cred=mode==='login'?await signInWithEmailAndPassword(auth,e,p):await createUserWithEmailAndPassword(auth,e,p);
+    const role=await getRole(cred.user);
+    location.href=(role==='admin'||role==='editor')?'panel.html':'duyurular.html';
+  }catch(x){say(errs[x.code]||('Hata: '+x.code),true);}
+};
+$('reset').onclick=async ev=>{ev.preventDefault();
+  try{await sendPasswordResetEmail(auth,$('email').value.trim());say('Şifre sıfırlama e-postası gönderildi (varsa). / Reset email sent.');}
+  catch(x){say(errs[x.code]||('Hata: '+x.code),true);}};
+</script></body></html>

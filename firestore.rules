@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin() { return signedIn() && role() == 'admin'; }
+    function isStaff() { return signedIn() && role() in ['admin', 'editor']; }
+
+    // Duyurular: herkes okur, sadece admin/editor yazar-siler
+    match /announcements/{id} {
+      allow read: if true;
+      allow create, update, delete: if isStaff();
+    }
+
+    // Kullanıcılar: herkes sadece kendi kaydını görür, admin hepsini görür
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      // Kayıt olurken sadece "user" rolüyle kendi kaydını oluşturabilir
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == 'user'
+                    && request.resource.data.keys().hasOnly(['email', 'role']);
+      // Rolü sadece admin değiştirebilir
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']);
+      allow delete: if false;
+    }
+  }
+}
