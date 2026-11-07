@@ -22,7 +22,8 @@
     <h2><span class="tr">Yeni Duyuru</span><span class="en">New Announcement</span></h2>
     <input id="a-title" maxlength="120" data-ph-tr="Başlık" data-ph-en="Title">
     <textarea id="a-body" maxlength="3000" data-ph-tr="İçerik" data-ph-en="Content"></textarea>
-    <input id="a-img" data-ph-tr="Fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="Image URL (optional, https://...)">
+    <div id="a-drop"></div>
+    <input id="a-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
     <button class="btn" id="a-add"><span class="tr">DUYURU YAYINLA</span><span class="en">PUBLISH</span></button>
     <div id="a-msg"></div>
 
@@ -44,12 +45,14 @@
 </div>
 <script src="site.js"></script>
 <script type="module">
+import {makeDrop} from "./upload.js";
 import {db,watchRole,collection,addDoc,getDocs,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
 const cell=(tr,text)=>{const td=document.createElement('td');td.textContent=text??'';tr.append(td);return td;};
 function note(el,t,err){el.innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;el.append(d);}
 let me=null,myRole=null,annRows=[];
+const drop=makeDrop($('a-drop'),1000);
 
 watchRole((role,user)=>{
   if(!user){show('need-login');return;}
@@ -73,11 +76,11 @@ function renderAnn(){
     td.append(b);tr.append(td);tb.append(tr);});
 }
 $('a-add').onclick=async()=>{
-  const t=$('a-title').value.trim(),c=$('a-body').value.trim(),img=$('a-img').value.trim();
+  const t=$('a-title').value.trim(),c=$('a-body').value.trim(),img=drop.getData()||$('a-img').value.trim();
   if(!t||!c){note($('a-msg'),T('Başlık ve içerik gerekli.','Title and content are required.'),true);return;}
-  if(img&&!/^https:\/\/.+/.test(img)){note($('a-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return;}
+  if(img&&!/^(https:\/\/|data:image\/jpeg;base64,).+/.test(img)){note($('a-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return;}
   try{await addDoc(collection(db,"announcements"),{title:t,content:c,imageUrl:img,createdAt:serverTimestamp()});
-    $('a-title').value='';$('a-body').value='';$('a-img').value='';
+    $('a-title').value='';$('a-body').value='';$('a-img').value='';drop.clear();
     note($('a-msg'),T('Duyuru yayınlandı.','Announcement published.'));loadAnn();}
   catch(e){note($('a-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
 };

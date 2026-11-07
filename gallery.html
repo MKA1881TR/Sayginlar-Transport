@@ -7,7 +7,8 @@
 <p class="subtitle">"Scenes from the asphalt - Saygınlar Transport convoy fleet on the road."</p>
 <div class="adm" id="adm" style="display:none">
   <b><span class="tr">+ YENİ FOTOĞRAF EKLE</span><span class="en">+ ADD NEW PHOTO</span></b>
-  <input id="u" data-ph-tr="Fotoğraf URL'si (https://...)" data-ph-en="Image URL (https://...)">
+  <div id="drop"></div>
+  <input id="u" data-ph-tr="ya da fotoğraf URL'si (https://...)" data-ph-en="or image URL (https://...)">
   <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
   <div id="m"></div>
 </div>
@@ -32,9 +33,11 @@
 <footer>&copy; 2026 Saygınlar Transport. All Rights Reserved.</footer>
 <script src="site.js"></script>
 <script type="module">
+import {makeDrop} from "./upload.js";
 import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
 const $=id=>document.getElementById(id);let admin=false;
-const ok=u=>/^https:\/\/.+/.test(u);
+const drop=makeDrop($('drop'),1280);
+const ok=u=>/^(https:\/\/|data:image\/jpeg;base64,).+/.test(u);
 function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
 let seq=0;
 async function load(){
@@ -54,9 +57,9 @@ async function load(){
   }catch(e){console.error(e);}
 }
 $('add').onclick=async()=>{
-  const u=$('u').value.trim();
-  if(!ok(u)){note(T('Geçerli bir https:// adresi gir.','Enter a valid https:// URL.'),true);return;}
-  try{await addDoc(collection(db,'gallery'),{url:u,createdAt:serverTimestamp()});$('u').value='';note(T('Eklendi.','Added.'));load();}
+  const u=drop.getData()||$('u').value.trim();
+  if(!ok(u)){note(T('Bir fotoğraf sürükle ya da geçerli bir https:// adresi gir.','Drag a photo or enter a valid https:// URL.'),true);return;}
+  try{await addDoc(collection(db,'gallery'),{url:u,createdAt:serverTimestamp()});$('u').value='';drop.clear();note(T('Eklendi.','Added.'));load();}
   catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
 };
 watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});

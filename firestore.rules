@@ -10,7 +10,12 @@ service cloud.firestore {
     function isAdmin()  { return signedIn() && role() in ['admin', 'owner']; }
     function isEditor() { return signedIn() && role() in ['editor', 'admin', 'owner']; }
 
-    function validUrl(u) { return u is string && u.matches('^https://.+') && u.size() <= 500; }
+    // https adresi VEYA sürükle-bırak ile yüklenen küçültülmüş JPEG (data:image/jpeg;base64,...)
+    function validUrl(u) {
+      return u is string
+        && ((u.matches('^https://.+') && u.size() <= 500)
+            || (u.matches('^data:image/jpeg;base64,.+') && u.size() <= 900000));
+    }
     function txt(s, max) { return s is string && s.size() > 0 && s.size() <= max; }
 
     // Duyurular: herkes okur; editor/admin/owner ekler ve siler

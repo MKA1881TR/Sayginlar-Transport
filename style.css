@@ -70,3 +70,6 @@ footer{text-align:center;color:#555;font-size:12px;padding:30px 0;background:#14
 .wd-i img{width:100%;max-height:110px;object-fit:cover;border-radius:4px;margin-top:6px}
 .wd a{color:#ff5555;font-weight:bold;text-decoration:none}
 .lock{color:#888}
+.drop{border:2px dashed #666;border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:#aaa;margin:8px 0 12px;background:#111;transition:.2s}
+.drop:hover,.drop.over{border-color:#cc0000;color:#fff;background:#1d1111}
+.drop img{max-width:100%;max-height:140px;margin:10px auto 0;border-radius:4px}

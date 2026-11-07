@@ -17,7 +17,7 @@ function render(){
     const s=document.createElement('div');const sm=document.createElement('small');sm.textContent=a.createdAt?fmt(a.createdAt.toDate()):'';s.append(sm);
     const p=document.createElement('p');p.textContent=a.content.length>140?a.content.slice(0,140)+'…':a.content;
     d.append(t,s,p);
-    if(a.imageUrl&&/^https:\/\//.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt='';i.loading='lazy';d.append(i);}
+    if(a.imageUrl&&/^(https:\/\/|data:image\/jpeg;base64,)/.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt='';i.loading='lazy';d.append(i);}
     body.append(d);
   });
   const l=document.createElement('div');l.style.paddingTop='8px';l.innerHTML='<a href="duyurular.html">'+bi('Tümünü gör →','See all →')+'</a>';body.append(l);
