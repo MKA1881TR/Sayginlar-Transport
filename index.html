@@ -1,13 +1,39 @@
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saygınlar Transport</title><link rel="stylesheet" href="style.css"></head>
+<title>Saygınlar Transport</title><link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
+</head>
 <body>
 <section class="hero">
   <h1>SAYGINLAR TRANSPORT</h1>
   <p><span class="tr">Lojistik Güven ve Samimiyetle Buluşuyor</span><span class="en">Logistics Meets Trust and Sincerity</span></p>
-  <!-- Aşağıdaki linki kendi TruckersMP linkinle değiştir -->
-  <a class="btn" style="padding:18px 50px;font-size:18px" href="https://truckersmp.com/" target="_blank" rel="noopener">JOIN VIA TRUCKERSMP</a>
+  <a class="btn" id="join" style="padding:18px 50px;font-size:18px" href="#">JOIN VIA TRUCKERSMP</a>
 </section>
-<script src="site.js"></script>
+
+<div class="mbg" id="mb" style="display:none">
+  <div class="mbox">
+    <h2>🍪 <span class="tr">Çerez Politikası</span><span class="en">Cookie Policy</span></h2>
+    <p class="tr">Devam etmeden önce <a href="cerez.html" target="_blank" rel="noopener">Çerez Politikası</a>'nı okuyup onaylıyor musunuz?</p>
+    <p class="en">Before continuing, do you accept the <a href="cerez.html" target="_blank" rel="noopener">Cookie Policy</a>?</p>
+    <div class="mrow">
+      <button class="btn" id="mok"><span class="tr">ONAYLIYORUM</span><span class="en">I ACCEPT</span></button>
+      <a class="btn gray" href="cerez.html" target="_blank" rel="noopener"><span class="tr">Çerez Politikası</span><span class="en">Cookie Policy</span></a>
+      <button class="btn gray" id="mno"><span class="tr">Vazgeç</span><span class="en">Cancel</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // TruckersMP'ye gidilecek adres. Kendi TruckersMP linkini buraya yaz:
+  var TMP_URL = "https://truckersmp.com/";
+  var mb = document.getElementById('mb');
+  function openM(e){ if(e) e.preventDefault(); mb.style.display='flex'; }
+  function closeM(){ mb.style.display='none'; }
+  document.getElementById('join').onclick = openM;
+  document.getElementById('mno').onclick = closeM;
+  document.getElementById('mok').onclick = function(){ location.href = TMP_URL; };
+  mb.onclick = function(e){ if(e.target===mb) closeM(); };
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeM(); });
+</script>
 <script type="module" src="duyuru-widget.js"></script>
 </body></html>

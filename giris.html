@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saygınlar Transport - Giriş</title><link rel="stylesheet" href="style.css"></head>
+<title>Saygınlar Transport - Giriş</title><link rel="stylesheet" href="style.css"><script src="site.js"></script>
+</head>
 <body>
 <div class="box narrow" style="max-width:460px">
   <h1 class="title" style="font-size:34px"><span class="tr">HESAP <b>GİRİŞİ</b></span><span class="en">ACCOUNT <b>LOGIN</b></span></h1>
@@ -14,7 +15,6 @@
   <p style="text-align:center"><a href="#" id="reset"><span class="tr">Şifremi unuttum</span><span class="en">Forgot password</span></a></p>
   <div id="msg"></div>
 </div>
-<script src="site.js"></script>
 <script type="module">
 import {auth,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,getRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);let mode='login';
