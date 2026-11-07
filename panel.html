@@ -42,11 +42,24 @@
       <div id="u-msg"></div>
       <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">Rol</span><span class="en">Role</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
     </div>
+
+    <div id="owner-only" style="display:none">
+      <h2 style="margin-top:40px"><span class="tr">🛠 Bakım Modu</span><span class="en">🛠 Maintenance Mode</span></h2>
+      <p style="color:#888;font-size:13px"><span class="tr">Açıkken normal ziyaretçiler siteyi göremez, ekranda "BAKIMDAYIZ!" yazar. Yetkililer (editor, admin, owner) siteyi görmeye devam eder. Sadece owner kullanabilir.</span><span class="en">While on, regular visitors cannot see the site and get a "UNDER MAINTENANCE!" screen. Staff (editor, admin, owner) can still see it. Owner only.</span></p>
+      <div id="mt-status" class="msg"></div>
+      <label style="color:#aaa;font-size:13px"><span class="tr">Tahmini açılış saati (isteğe bağlı)</span><span class="en">Estimated reopening time (optional)</span></label>
+      <input type="time" id="mt-time" style="max-width:180px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="mt-on"><span class="tr">BAKIMI AÇ / SAATİ GÜNCELLE</span><span class="en">TURN ON / UPDATE TIME</span></button>
+        <button class="btn gray" id="mt-off"><span class="tr">BAKIMI KAPAT</span><span class="en">TURN OFF</span></button>
+      </div>
+      <div id="mt-msg"></div>
+    </div>
   </div>
 </div>
 <script type="module">
 import {makeDrop} from "./upload.js";
-import {db,watchRole,collection,addDoc,getDocs,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
+import {db,watchRole,setDoc,onSnapshot,collection,addDoc,getDocs,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
 const cell=(tr,text)=>{const td=document.createElement('td');td.textContent=text??'';tr.append(td);return td;};
@@ -61,6 +74,8 @@ watchRole((role,user)=>{
   $('who').textContent=user.email+' ('+role+')';
   show('panel');loadAnn();
   if(isAdminRole(role)){$('admin-only').style.display='block';loadUsers();}
+  $('owner-only').style.display=role==='owner'?'block':'none';
+  if(role==='owner')startMt();
 });
 
 async function loadAnn(){
@@ -106,5 +121,33 @@ async function loadUsers(){
     }
     tr.append(td,t2);tb.append(tr);});
 }
-document.addEventListener('langchange',()=>{if(annRows.length)renderAnn();});
+// ---- Bakım modu (sadece owner) ----
+let mtState={on:false,until:''},mtStarted=false;
+function renderMt(){
+  const t=/^\d{2}:\d{2}$/.test(mtState.until)?mtState.until.replace(':','.'):'';
+  $('mt-status').innerHTML=mtState.on
+    ?bi('🔴 Bakım modu <b>AÇIK</b>'+(t?' — tahmini açılış: '+t:''),'🔴 Maintenance mode is <b>ON</b>'+(t?' — estimated reopening: '+t:''))
+    :bi('🟢 Site <b>açık</b>','🟢 Site is <b>live</b>');
+}
+function startMt(){
+  if(mtStarted)return;mtStarted=true;
+  onSnapshot(doc(db,'settings','maintenance'),s=>{
+    const d=s.exists()?s.data():{};
+    mtState={on:d.on===true,until:typeof d.until==='string'?d.until:''};
+    if(mtState.until)$('mt-time').value=mtState.until;
+    renderMt();
+  },()=>{});
+}
+async function setMt(on){
+  try{
+    await setDoc(doc(db,'settings','maintenance'),{on:on,until:on?($('mt-time').value||''):'',updatedAt:serverTimestamp()});
+    note($('mt-msg'),on?T('Bakım modu açıldı.','Maintenance mode is on.'):T('Bakım modu kapatıldı, site açık.','Maintenance mode is off, the site is live.'));
+  }catch(e){note($('mt-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
+}
+$('mt-on').onclick=()=>{
+  if(!mtState.on&&!confirm(T('Bakım modu açılsın mı? Normal ziyaretçiler siteyi göremeyecek.','Turn on maintenance mode? Regular visitors will not be able to see the site.')))return;
+  setMt(true);
+};
+$('mt-off').onclick=()=>setMt(false);
+document.addEventListener('langchange',()=>{if(annRows.length)renderAnn();renderMt();});
 </script></body></html>

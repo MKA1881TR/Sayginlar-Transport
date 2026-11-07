@@ -86,3 +86,16 @@ footer{text-align:center;color:#555;font-size:12px;padding:30px 0;background:#14
 .btn.rect:hover{background:#333}
 .sortable-on .staff.dyn{cursor:grab}
 .ghost{opacity:.35}
+
+/* --- bakım modu --- */
+html.mt-on,html.mt-on body{overflow:hidden}
+#mtnc{position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.mt-in{max-width:680px}
+.mt-h{font-family:'Impact',sans-serif;font-size:clamp(44px,10vw,100px);color:#cc0000;letter-spacing:3px;text-shadow:0 0 30px rgba(204,0,0,.6);margin-bottom:22px}
+.mt-in p{color:#ddd;font-size:18px;line-height:1.7;margin:10px 0}
+.mt-in b{color:#fff}
+.mt-l{display:inline-block;margin-top:34px;color:#666;font-size:12px;text-decoration:none}
+.mt-l:hover{color:#aaa}
+.mt-lang{position:absolute;top:18px;right:22px;color:#888;font-weight:bold;font-size:14px}
+.mt-lang span{cursor:pointer}.mt-lang span:hover{color:#fff}
+#mtbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#cc0000;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:bold;z-index:950;box-shadow:0 4px 15px rgba(0,0,0,.5)}
