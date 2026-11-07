@@ -1,111 +1,107 @@
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saygınlar Transport - Yönetim Paneli</title><link rel="stylesheet" href="style.css"></head>
+<title>Saygınlar Transport - Management Panel</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <div class="box">
-  <h1 class="title" style="font-size:36px">YÖNETİM <b>PANELİ</b></h1>
+  <h1 class="title" style="font-size:36px"><span class="tr">YÖNETİM <b>PANELİ</b></span><span class="en">MANAGEMENT <b>PANEL</b></span></h1>
 
   <div id="need-login" style="display:none;text-align:center">
-    <p>Bu sayfa için giriş yapmalısın. / Please log in.</p>
-    <a class="btn" href="giris.html">GİRİŞ YAP / LOGIN</a>
+    <p><span class="tr">Bu sayfa için giriş yapmalısın.</span><span class="en">You need to log in to view this page.</span></p>
+    <a class="btn" href="giris.html"><span class="tr">GİRİŞ YAP</span><span class="en">LOG IN</span></a>
   </div>
 
   <div id="no-access" style="display:none;text-align:center">
-    <div class="msg err">Bu hesabın panele erişim yetkisi yok. Bir yöneticiden yetki iste.<br>Your account has no access. Ask an admin.</div>
+    <div class="msg err"><span class="tr">Bu hesabın panele erişim yetkisi yok. Bir yöneticiden yetki iste.</span><span class="en">This account has no access to the panel. Ask an admin for permission.</span></div>
     <p id="who2" style="color:#888"></p>
-    <button class="btn gray" id="out2">Çıkış / Log out</button>
   </div>
 
   <div id="panel" style="display:none">
-    <p style="color:#888">Giriş yapan: <b id="who"></b> <button class="btn small gray" id="out" style="margin-left:10px">Çıkış</button></p>
+    <p style="color:#888"><span class="tr">Giriş yapan:</span><span class="en">Signed in as:</span> <b id="who"></b></p>
+    <p style="color:#888;font-size:13px"><span class="tr">İpucu: Admin/owner olarak giriş yapınca Management, Gallery ve Partnership sayfalarında "Yeni Ekle" kutusu görünür.</span><span class="en">Tip: when logged in as admin/owner, an "Add" box appears on the Management, Gallery and Partnership pages.</span></p>
 
-    <h2>Yeni Duyuru</h2>
-    <input id="a-title" placeholder="Başlık" maxlength="120">
-    <textarea id="a-body" placeholder="İçerik" maxlength="3000"></textarea>
-    <button class="btn" id="a-add">DUYURU YAYINLA</button>
+    <h2><span class="tr">Yeni Duyuru</span><span class="en">New Announcement</span></h2>
+    <input id="a-title" maxlength="120" data-ph-tr="Başlık" data-ph-en="Title">
+    <textarea id="a-body" maxlength="3000" data-ph-tr="İçerik" data-ph-en="Content"></textarea>
+    <input id="a-img" data-ph-tr="Fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="Image URL (optional, https://...)">
+    <button class="btn" id="a-add"><span class="tr">DUYURU YAYINLA</span><span class="en">PUBLISH</span></button>
     <div id="a-msg"></div>
 
-    <h2 style="margin-top:35px">Yayındaki Duyurular</h2>
-    <div class="wrap-x"><table><thead><tr><th>Tarih</th><th>Başlık</th><th>Yazan</th><th></th></tr></thead><tbody id="a-rows"></tbody></table></div>
+    <h2 style="margin-top:35px"><span class="tr">Yayındaki Duyurular</span><span class="en">Published Announcements</span></h2>
+    <div class="wrap-x"><table><thead><tr><th><span class="tr">Tarih</span><span class="en">Date</span></th><th><span class="tr">Başlık</span><span class="en">Title</span></th><th></th></tr></thead><tbody id="a-rows"></tbody></table></div>
 
     <div id="admin-only" style="display:none">
-      <h2 style="margin-top:40px">Hesap Yetkileri</h2>
-      <p style="color:#888;font-size:13px"><b>user</b>: yetkisiz &nbsp;•&nbsp; <b>editor</b>: duyuru ekler/siler &nbsp;•&nbsp; <b>admin</b>: her şey + yetki verir</p>
-      <div class="wrap-x"><table><thead><tr><th>E-posta</th><th>Rol</th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:40px"><h2>Başvuru Listesi</h2><button class="btn small" id="ap-refresh">🔄 Yenile</button></div>
-      <div id="ap-msg"></div>
-      <div class="wrap-x"><table><thead><tr><th>Zaman</th><th>İsim</th><th>Steam</th><th>Discord</th><th>Yaş</th><th>DLC</th><th>Neden</th></tr></thead><tbody id="ap-rows"></tbody></table></div>
+      <h2 style="margin-top:40px"><span class="tr">Hesap Yetkileri</span><span class="en">Account Roles</span></h2>
+      <p style="color:#888;font-size:13px">
+        <b>user</b>: <span class="tr">yetkisiz</span><span class="en">no access</span> &nbsp;•&nbsp;
+        <b>editor</b>: <span class="tr">sadece duyuru</span><span class="en">announcements only</span> &nbsp;•&nbsp;
+        <b>admin</b>: <span class="tr">duyuru + site içeriği + yetki verme</span><span class="en">announcements + site content + roles</span> &nbsp;•&nbsp;
+        <b>owner</b>: <span class="tr">en üst, kimse değiştiremez</span><span class="en">top level, nobody can change it</span>
+      </p>
+      <div id="u-msg"></div>
+      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">Rol</span><span class="en">Role</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
     </div>
   </div>
 </div>
 <script src="site.js"></script>
 <script type="module">
-import {auth,db,onAuthStateChanged,signOut,getRole,collection,addDoc,getDocs,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp} from "./fb.js";
-import {APPS_SCRIPT_URL} from "./firebase-config.js";
+import {db,watchRole,collection,addDoc,getDocs,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
 const cell=(tr,text)=>{const td=document.createElement('td');td.textContent=text??'';tr.append(td);return td;};
 function note(el,t,err){el.innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;el.append(d);}
-let me=null;
+let me=null,myRole=null,annRows=[];
 
-onAuthStateChanged(auth, async user=>{
+watchRole((role,user)=>{
   if(!user){show('need-login');return;}
-  me=user;
-  const role=await getRole(user);
-  if(role!=='admin'&&role!=='editor'){$('who2').textContent=user.email;show('no-access');return;}
+  me=user;myRole=role;
+  if(!isStaffRole(role)){$('who2').textContent=user.email;show('no-access');return;}
   $('who').textContent=user.email+' ('+role+')';
-  show('panel'); loadAnn();
-  if(role==='admin'){$('admin-only').style.display='block';loadUsers();loadApps();}
+  show('panel');loadAnn();
+  if(isAdminRole(role)){$('admin-only').style.display='block';loadUsers();}
 });
-$('out').onclick=$('out2').onclick=()=>signOut(auth).then(()=>location.reload());
 
 async function loadAnn(){
-  const tb=$('a-rows');tb.innerHTML='';
   const snap=await getDocs(query(collection(db,"announcements"),orderBy("createdAt","desc")));
-  snap.forEach(d=>{const a=d.data(),tr=document.createElement('tr');
-    cell(tr,a.createdAt?a.createdAt.toDate().toLocaleString('tr-TR'):'');cell(tr,a.title);cell(tr,a.author);
-    const td=document.createElement('td');const b=document.createElement('button');b.className='btn small';b.textContent='Sil';
-    b.onclick=async()=>{if(confirm('Bu duyuru silinsin mi?')){await deleteDoc(doc(db,"announcements",d.id));loadAnn();}};
+  annRows=snap.docs;renderAnn();
+}
+function renderAnn(){
+  const tb=$('a-rows');tb.innerHTML='';
+  annRows.forEach(d=>{const a=d.data(),tr=document.createElement('tr');
+    cell(tr,a.createdAt?fmt(a.createdAt.toDate()):'');cell(tr,a.title);
+    const td=document.createElement('td');const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Sil','Delete');
+    b.onclick=async()=>{if(confirm(T('Bu duyuru silinsin mi?','Delete this announcement?'))){await deleteDoc(doc(db,"announcements",d.id));loadAnn();}};
     td.append(b);tr.append(td);tb.append(tr);});
 }
 $('a-add').onclick=async()=>{
-  const t=$('a-title').value.trim(),c=$('a-body').value.trim();
-  if(!t||!c){note($('a-msg'),'Başlık ve içerik gerekli.',true);return;}
-  try{await addDoc(collection(db,"announcements"),{title:t,content:c,author:me.email,createdAt:serverTimestamp()});
-    $('a-title').value='';$('a-body').value='';note($('a-msg'),'Duyuru yayınlandı.');loadAnn();}
-  catch(e){note($('a-msg'),'Yetkin yok veya hata oluştu.',true);console.error(e);}
+  const t=$('a-title').value.trim(),c=$('a-body').value.trim(),img=$('a-img').value.trim();
+  if(!t||!c){note($('a-msg'),T('Başlık ve içerik gerekli.','Title and content are required.'),true);return;}
+  if(img&&!/^https:\/\/.+/.test(img)){note($('a-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return;}
+  try{await addDoc(collection(db,"announcements"),{title:t,content:c,imageUrl:img,createdAt:serverTimestamp()});
+    $('a-title').value='';$('a-body').value='';$('a-img').value='';
+    note($('a-msg'),T('Duyuru yayınlandı.','Announcement published.'));loadAnn();}
+  catch(e){note($('a-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
 };
 
 async function loadUsers(){
   const tb=$('u-rows');tb.innerHTML='';
   const snap=await getDocs(collection(db,"users"));
   snap.forEach(d=>{const u=d.data(),tr=document.createElement('tr');cell(tr,u.email);
-    const td=document.createElement('td');const sel=document.createElement('select');sel.style.margin='0';
-    ['user','editor','admin'].forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;if(r===u.role)o.selected=true;sel.append(o);});
-    if(d.id===me.uid)sel.disabled=true;
-    td.append(sel);tr.append(td);
-    const t2=document.createElement('td');
-    if(d.id!==me.uid){const b=document.createElement('button');b.className='btn small';b.textContent='Kaydet';
-      b.onclick=async()=>{await updateDoc(doc(db,"users",d.id),{role:sel.value});b.textContent='✔ Kaydedildi';};t2.append(b);}
-    else t2.textContent='(sen)';
-    tr.append(t2);tb.append(tr);});
+    const td=document.createElement('td'),t2=document.createElement('td');
+    if(u.role==='owner'){td.innerHTML='<b>owner</b> <span class="lock">🔒</span>';}
+    else if(d.id===me.uid){td.textContent=u.role;t2.innerHTML=bi('(sen)','(you)');}
+    else{
+      const sel=document.createElement('select');sel.style.margin='0';
+      const opts=['user','editor','admin'];if(myRole==='owner')opts.push('owner');
+      opts.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;if(r===u.role)o.selected=true;sel.append(o);});
+      td.append(sel);
+      const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Kaydet','Save');
+      b.onclick=async()=>{
+        try{await updateDoc(doc(db,"users",d.id),{role:sel.value});b.innerHTML='✔';}
+        catch(e){note($('u-msg'),T('Bu rolü değiştirme yetkin yok.','You cannot change this role.'),true);}
+      };
+      t2.append(b);
+    }
+    tr.append(td,t2);tb.append(tr);});
 }
-
-async function loadApps(){
-  const tb=$('ap-rows');tb.innerHTML='';$('ap-msg').innerHTML='';
-  try{
-    const token=await me.getIdToken();
-    const r=await fetch(APPS_SCRIPT_URL+"?sheet=Basvurular&token="+encodeURIComponent(token));
-    const data=await r.json();
-    if(data.error){note($('ap-msg'),'Başvurular alınamadı: '+data.error,true);return;}
-    for(let i=1;i<data.length;i++){const tr=document.createElement('tr');
-      [0,1].forEach(k=>cell(tr,data[i][k]));
-      const td=document.createElement('td');
-      if(/^https?:\/\//.test(String(data[i][2]))){const a=document.createElement('a');a.href=data[i][2];a.textContent='İncele';a.target='_blank';a.rel='noopener';td.append(a);}
-      else td.textContent=data[i][2];tr.append(td);
-      [3,4,5,6].forEach(k=>cell(tr,data[i][k]));tb.append(tr);}
-  }catch(e){note($('ap-msg'),'Başvurular yüklenemedi (Apps Script güncellemesi yapıldı mı?).',true);}
-}
-$('ap-refresh').onclick=loadApps;
+document.addEventListener('langchange',()=>{if(annRows.length)renderAnn();});
 </script></body></html>

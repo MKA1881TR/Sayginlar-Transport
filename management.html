@@ -7,17 +7,58 @@
 <div class="box">
   <h1 class="title"><span class="tr">YÖNETİM <b>KADROSU</b></span><span class="en">MANAGEMENT <b>TEAM</b></span></h1>
   <p class="subtitle"><span class="tr">"Saygınlar Transport'un birleşik lider ve operasyon ekibi."</span><span class="en">"The unified leadership and operations team of Saygınlar Transport."</span></p>
+  <div class="adm" id="adm" style="display:none">
+    <b><span class="tr">+ YENİ YETKİLİ EKLE</span><span class="en">+ ADD NEW STAFF MEMBER</span></b>
+    <input id="n" maxlength="80" data-ph-tr="İsim (örn: |Ahmet • DCOO|)" data-ph-en="Name (e.g. |Ahmet • DCOO|)">
+    <input id="r" maxlength="120" data-ph-tr="Görev (isteğe bağlı)" data-ph-en="Role (optional)">
+    <div style="margin:6px 0 4px;color:#888;font-size:13px"><span class="tr">Simge seç:</span><span class="en">Pick an icon:</span></div>
+    <div id="ic"></div>
+    <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
+    <div id="m"></div>
+  </div>
   <div class="grid3" id="grid"></div>
 </div>
 <script src="site.js"></script>
-<script>
-var staff=[
+<script type="module">
+import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
+const $=id=>document.getElementById(id);let admin=false;
+const ICONS=['fa-crown','fa-users','fa-code','fa-user-tie','fa-headset','fa-truck'];
+const staff=[
 ["fa-crown","Mert • 22","ŞİRKET SAHİBİ / KONVOY & ETKİNLİK & SAVE & EĞİTİM MÜDÜRÜ","COMPANY OWNER / CONVOY & EVENT & SAVE & EDUCATION MANAGER"],
 ["fa-users","| Halil • Founder |","Kurucu / İnsan Kaynakları Müdürü","Founder / Human Resources Manager"],
 ["fa-code","|Emirhan • DCOO|","Operasyonlardan Sorumlu Başkan Yardımcısı / Discord Geliştiricisi","Deputy Chief Operating Officer / Discord Developer"],
 ["fa-user-tie","|Emir • DCOO |","Operasyonlardan Sorumlu Başkan Yardımcısı","Deputy Chief Operating Officer"],
 ["fa-headset","|Canberk • T. Sup.|","Teknik Destek","Tech Support"],
 ["fa-truck","|Yiğit • T.B.S |","Truckers Book Sorumlusu","Truckers Book Supervisor"]];
-document.getElementById('grid').innerHTML=staff.map(function(s){
- return '<div class="staff"><div class="avatar"><i class="fas '+s[0]+'"></i></div><div class="sname">'+s[1]+'</div><div class="role"><span class="tr">'+s[2]+'</span><span class="en">'+s[3]+'</span></div></div>';}).join('');
+function card(icon,name,roleNode,delFn){
+  const c=document.createElement('div');c.className='staff';
+  const av=document.createElement('div');av.className='avatar';const i=document.createElement('i');i.className='fas '+(ICONS.includes(icon)?icon:'fa-user-tie');av.append(i);
+  const n=document.createElement('div');n.className='sname';n.textContent=name;c.append(av,n);
+  if(roleNode){const r=document.createElement('div');r.className='role';if(typeof roleNode==='string')r.textContent=roleNode;else r.innerHTML=bi(roleNode[0],roleNode[1]);c.append(r);}
+  if(delFn){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';x.onclick=delFn;c.append(x);}
+  return c;
+}
+function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
+let seq=0;
+async function load(){
+  const my=++seq;const g=$('grid');g.innerHTML='';
+  staff.forEach(s=>g.append(card(s[0],s[1],[s[2],s[3]])));
+  try{
+    const s=await getDocs(query(collection(db,'staff'),orderBy('createdAt','asc')));
+    if(my!==seq)return;
+    s.forEach(d=>{const p=d.data();
+      g.append(card(p.icon,p.name,p.role||null,admin?async()=>{if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'staff',d.id));load();}}:null));});
+  }catch(e){console.error(e);}
+}
+let sel=ICONS[0];
+function mark(){document.querySelectorAll('#ic .ic').forEach(b=>b.classList.toggle('on',b.dataset.k===sel));}
+ICONS.forEach(k=>{const b=document.createElement('button');b.type='button';b.className='ic';b.dataset.k=k;b.innerHTML='<i class="fas '+k+'"></i>';b.onclick=()=>{sel=k;mark();};$('ic').append(b);});mark();
+$('add').onclick=async()=>{
+  const n=$('n').value.trim(),r=$('r').value.trim();
+  if(!n){note(T('İsim gerekli.','Name is required.'),true);return;}
+  try{await addDoc(collection(db,'staff'),{name:n,icon:sel,role:r,createdAt:serverTimestamp()});$('n').value='';$('r').value='';note(T('Eklendi.','Added.'));load();}
+  catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
+};
+load();
+watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});
 </script></body></html>

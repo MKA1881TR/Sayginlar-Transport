@@ -5,7 +5,14 @@
 <div style="padding:40px 5% 60px;text-align:center">
 <div class="title" style="color:#cc0000;text-shadow:0 0 15px rgba(204,0,0,.5)">STRATEGIC PARTNERSHIPS</div>
 <h2 style="letter-spacing:4px;color:#ccc;text-transform:uppercase;margin:5px 0 40px">Stronger Together</h2>
-<div class="pgrid">
+<div class="adm" id="adm" style="display:none">
+  <b><span class="tr">+ YENİ PARTNER EKLE</span><span class="en">+ ADD NEW PARTNER</span></b>
+  <input id="n" maxlength="80" data-ph-tr="VTC ismi" data-ph-en="VTC name">
+  <input id="u" data-ph-tr="Logo URL'si (https://...)" data-ph-en="Logo URL (https://...)">
+  <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
+  <div id="m"></div>
+</div>
+<div class="pgrid" id="pg">
 <div class="pcard"><img src="https://i.hizliresim.com/f6j577e.png" alt="Trakya Anadolu Lojistik"><span>Trakya Anadolu Lojistik</span></div>
 <div class="pcard"><img src="https://i.hizliresim.com/9p63b3u.jpg" alt="Fire Phoenix"><span>Fire Phoenix</span></div>
 <div class="pcard"><img src="https://i.hizliresim.com/bg8whxbz.png" alt="Northern Lights"><span>Northern Lights</span></div>
@@ -14,4 +21,35 @@
 <div class="pcard"><img src="https://i.hizliresim.com/2yflqlds.png" alt="POLLITO PIO VTC"><span>POLLITO PIO VTC</span></div>
 <div class="pcard"><img src="https://i.hizliresim.com/fzx9j1rv.jpg" alt="Hort Trans Logistics Company"><span>Hort Trans Logistics Company</span></div>
 </div></div>
-<script src="site.js"></script></body></html>
+<script src="site.js"></script>
+<script type="module">
+import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
+const $=id=>document.getElementById(id);let admin=false;
+const ok=u=>/^https:\/\/.+/.test(u);
+function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
+let seq=0;
+async function load(){
+  const my=++seq;
+  document.querySelectorAll('#pg .dyn').forEach(e=>e.remove());
+  try{
+    const s=await getDocs(query(collection(db,'partners'),orderBy('createdAt','asc')));
+    if(my!==seq)return;
+    s.forEach(d=>{
+      const p=d.data();if(!ok(p.imageUrl))return;
+      const c=document.createElement('div');c.className='pcard dyn';
+      const i=document.createElement('img');i.src=p.imageUrl;i.alt=p.name;
+      const n=document.createElement('span');n.textContent=p.name;c.append(i,n);
+      if(admin){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';
+        x.onclick=async()=>{if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'partners',d.id));load();}};c.append(x);}
+      $('pg').append(c);
+    });
+  }catch(e){console.error(e);}
+}
+$('add').onclick=async()=>{
+  const n=$('n').value.trim(),u=$('u').value.trim();
+  if(!n||!ok(u)){note(T('VTC ismi ve geçerli bir https:// logo adresi gir.','Enter a VTC name and a valid https:// logo URL.'),true);return;}
+  try{await addDoc(collection(db,'partners'),{name:n,imageUrl:u,createdAt:serverTimestamp()});$('n').value='';$('u').value='';note(T('Eklendi.','Added.'));load();}
+  catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
+};
+watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});
+</script></body></html>

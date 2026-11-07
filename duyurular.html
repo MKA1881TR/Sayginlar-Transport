@@ -11,16 +11,23 @@
 <script type="module">
 import {db,collection,getDocs,query,orderBy} from "./fb.js";
 const list=document.getElementById('list');
+let rows=[];
+function render(){
+  list.innerHTML='';
+  if(!rows.length){list.innerHTML='<div class="msg">'+bi('Henüz duyuru yok.','No announcements yet.')+'</div>';return;}
+  rows.forEach(a=>{
+    const el=document.createElement('div');el.className='ann';
+    const h=document.createElement('h3');h.textContent=a.title;
+    const s=document.createElement('small');s.textContent=a.createdAt?fmt(a.createdAt.toDate()):'';
+    const p=document.createElement('p');p.textContent=a.content;
+    el.append(h,s,p);
+    if(a.imageUrl&&/^https:\/\//.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt=a.title;i.loading='lazy';el.append(i);}
+    list.append(el);
+  });
+}
 try{
   const snap=await getDocs(query(collection(db,"announcements"),orderBy("createdAt","desc")));
-  list.innerHTML="";
-  if(snap.empty){list.innerHTML='<div class="msg"><span class="tr">Henüz duyuru yok.</span><span class="en">No announcements yet.</span></div>';}
-  snap.forEach(d=>{
-    const a=d.data(), el=document.createElement('div'); el.className='ann';
-    const h=document.createElement('h3'); h.textContent=a.title;
-    const s=document.createElement('small'); s.textContent=(a.createdAt?a.createdAt.toDate().toLocaleString('tr-TR'):'')+(a.author?' • '+a.author:'');
-    const p=document.createElement('p'); p.textContent=a.content;
-    el.append(h,s,p); list.append(el);
-  });
-}catch(e){list.innerHTML='<div class="msg err">Duyurular yüklenemedi. / Could not load announcements.</div>';console.error(e);}
+  rows=snap.docs.map(d=>d.data());render();
+}catch(e){list.innerHTML='<div class="msg err">'+bi('Duyurular yüklenemedi.','Could not load announcements.')+'</div>';console.error(e);}
+document.addEventListener('langchange',()=>{if(rows)render();});
 </script></body></html>

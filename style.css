@@ -51,3 +51,22 @@ th,td{padding:10px;border:1px solid #444;text-align:left;font-size:14px;vertical
 footer{text-align:center;color:#555;font-size:12px;padding:30px 0;background:#141414;border-top:1px solid #222}
 @media(max-width:992px){.grid3,.pgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.grid3,.pgrid{grid-template-columns:1fr}.box{padding:30px 18px;margin:20px 10px}.title{font-size:34px}.nav{padding:12px 14px}}
+/* --- v2 eklemeler --- */
+.nav ul .tools{display:flex;gap:10px;align-items:center}
+.gbtn{background:#1e9e4a;color:#fff!important;border:2px solid #fff;border-radius:6px;padding:5px 14px;font-weight:bold;font-size:14px;text-decoration:none;box-shadow:0 4px 15px rgba(30,158,74,.5)}
+.gbtn:hover{background:#25b858}
+.adm{background:#1a1a1a;border:1px dashed #cc0000;border-radius:8px;padding:18px;max-width:720px;margin:0 auto 30px;text-align:left}
+.adm b{color:#cc0000}
+.xbtn{position:absolute;top:8px;right:8px;background:#cc0000;color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-weight:bold;z-index:2}
+.gal div,.pcard,.staff{position:relative}
+.ic{width:46px;height:46px;border-radius:50%;background:#111;border:2px solid #444;color:#cc0000;font-size:20px;cursor:pointer;margin:0 8px 8px 0}
+.ic.on{border-color:#cc0000;background:#2a1111;box-shadow:0 0 10px rgba(204,0,0,.6)}
+.ann img{max-width:100%;max-height:420px;border-radius:6px;margin-top:10px;display:block}
+.wd{position:fixed;right:18px;bottom:18px;width:320px;max-width:calc(100vw - 36px);background:#222;border:1px solid #333;border-top:4px solid #cc0000;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:900;font-size:13px}
+.wd-h{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;font-weight:bold}
+.wd-b{max-height:55vh;overflow:auto;padding:0 14px 12px}
+.wd-i{border-top:1px solid #333;padding:10px 0}
+.wd-i small{color:#888}.wd-i p{margin:6px 0 0;color:#ddd;line-height:1.5}
+.wd-i img{width:100%;max-height:110px;object-fit:cover;border-radius:4px;margin-top:6px}
+.wd a{color:#ff5555;font-weight:bold;text-decoration:none}
+.lock{color:#888}

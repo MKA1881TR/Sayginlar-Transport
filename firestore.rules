@@ -6,25 +6,76 @@ service cloud.firestore {
     function role() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
-    function isAdmin() { return signedIn() && role() == 'admin'; }
-    function isStaff() { return signedIn() && role() in ['admin', 'editor']; }
+    function isOwner()  { return signedIn() && role() == 'owner'; }
+    function isAdmin()  { return signedIn() && role() in ['admin', 'owner']; }
+    function isEditor() { return signedIn() && role() in ['editor', 'admin', 'owner']; }
 
-    // Duyurular: herkes okur, sadece admin/editor yazar-siler
+    function validUrl(u) { return u is string && u.matches('^https://.+') && u.size() <= 500; }
+    function txt(s, max) { return s is string && s.size() > 0 && s.size() <= max; }
+
+    // Duyurular: herkes okur; editor/admin/owner ekler ve siler
     match /announcements/{id} {
       allow read: if true;
-      allow create, update, delete: if isStaff();
+      allow create: if isEditor()
+        && request.resource.data.keys().hasOnly(['title', 'content', 'imageUrl', 'createdAt'])
+        && txt(request.resource.data.title, 120)
+        && txt(request.resource.data.content, 3000)
+        && (request.resource.data.imageUrl == '' || validUrl(request.resource.data.imageUrl))
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isEditor();
+      allow update: if false;
     }
 
-    // Kullanıcılar: herkes sadece kendi kaydını görür, admin hepsini görür
+    // Partnerler
+    match /partners/{id} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['name', 'imageUrl', 'createdAt'])
+        && txt(request.resource.data.name, 80)
+        && validUrl(request.resource.data.imageUrl)
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Galeri
+    match /gallery/{id} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['url', 'createdAt'])
+        && validUrl(request.resource.data.url)
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Yönetim kadrosu
+    match /staff/{id} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['name', 'icon', 'role', 'createdAt'])
+        && txt(request.resource.data.name, 80)
+        && request.resource.data.icon in ['fa-crown', 'fa-users', 'fa-code', 'fa-user-tie', 'fa-headset', 'fa-truck']
+        && request.resource.data.role is string && request.resource.data.role.size() <= 120
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Kullanıcılar ve roller
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       // Kayıt olurken sadece "user" rolüyle kendi kaydını oluşturabilir
       allow create: if signedIn() && request.auth.uid == uid
                     && request.resource.data.role == 'user'
                     && request.resource.data.keys().hasOnly(['email', 'role']);
-      // Rolü sadece admin değiştirebilir
+      // Rolü admin/owner değiştirir. OWNER rolündeki kişinin rolü panelden asla değiştirilemez.
+      // "owner" rolünü sadece bir owner verebilir.
       allow update: if isAdmin()
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']);
+                    && resource.data.role != 'owner'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+                    && (request.resource.data.role in ['user', 'editor', 'admin']
+                        || (request.resource.data.role == 'owner' && isOwner()));
       allow delete: if false;
     }
   }
