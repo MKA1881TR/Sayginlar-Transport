@@ -2,7 +2,9 @@
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saygınlar Transport - Management</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css"><script src="site.js"></script>
+<link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 </head>
 <body>
 <div class="box">
@@ -17,12 +19,13 @@
     <div style="margin:6px 0 4px;color:#888;font-size:13px"><span class="tr">Simge seç:</span><span class="en">Pick an icon:</span></div>
     <div id="ic"></div>
     <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
+    <div style="color:#888;font-size:12px;margin-top:12px"><span class="tr">💡 Sonradan eklenen kartların sırasını, kartı basılı tutup sürükleyerek değiştirebilirsin.</span><span class="en">💡 You can reorder added cards by pressing and dragging them.</span></div>
     <div id="m"></div>
   </div>
   <div class="grid3" id="grid"></div>
 </div>
 <script type="module">
-import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
+import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,updateDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
 const $=id=>document.getElementById(id);let admin=false;
 const ICONS=['fa-crown','fa-users','fa-code','fa-user-tie','fa-headset','fa-truck'];
 const staff=[
@@ -32,28 +35,49 @@ const staff=[
 ["fa-user-tie","|Emir • DCOO |","Operasyonlardan Sorumlu Başkan Yardımcısı","Deputy Chief Operating Officer"],
 ["fa-headset","|Canberk • T. Sup.|","Teknik Destek","Tech Support"],
 ["fa-truck","|Yiğit • T.B.S |","Truckers Book Sorumlusu","Truckers Book Supervisor"]];
-function card(icon,name,roleNode,delFn){
+function card(icon,name,roles,delFn,id){
   const c=document.createElement('div');c.className='staff';
+  if(id){c.dataset.id=id;c.classList.add('dyn');}
   const av=document.createElement('div');av.className='avatar';const i=document.createElement('i');i.className='fas '+(ICONS.includes(icon)?icon:'fa-user-tie');av.append(i);
   const n=document.createElement('div');n.className='sname';n.textContent=name;c.append(av,n);
-  if(roleNode){const r=document.createElement('div');r.className='role';
-    const a=document.createElement('span');a.className='tr';a.textContent=roleNode[0];
-    const b=document.createElement('span');b.className='en';b.textContent=roleNode[1];r.append(a,b);c.append(r);}
+  if(roles){const r=document.createElement('div');r.className='role';
+    const a=document.createElement('span');a.className='tr';a.textContent=roles[0];
+    const b=document.createElement('span');b.className='en';b.textContent=roles[1];r.append(a,b);c.append(r);}
   if(delFn){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';x.onclick=delFn;c.append(x);}
   return c;
 }
 function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
+const ord=p=>typeof p.order==='number'?p.order:(p.createdAt&&p.createdAt.toMillis?p.createdAt.toMillis():0);
 let seq=0;
 async function load(){
-  const my=++seq;const g=$('grid');g.innerHTML='';
-  staff.forEach(s=>g.append(card(s[0],s[1],[s[2],s[3]])));
+  const my=++seq;let rows=[];
   try{
     const s=await getDocs(query(collection(db,'staff'),orderBy('createdAt','asc')));
-    if(my!==seq)return;
-    s.forEach(d=>{const p=d.data();
-      const rt=p.role||p.roleEn||'',re=p.roleEn||p.role||'';
-      g.append(card(p.icon,p.name,rt?[rt,re]:null,admin?async()=>{if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'staff',d.id));load();}}:null));});
+    rows=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ord(a)-ord(b));
   }catch(e){console.error(e);}
+  if(my!==seq)return;
+  const g=$('grid');g.innerHTML='';
+  staff.forEach(s=>g.append(card(s[0],s[1],[s[2],s[3]])));
+  rows.forEach(p=>{
+    const rt=p.role||p.roleEn||'',re=p.roleEn||p.role||'';
+    g.append(card(p.icon,p.name,rt?[rt,re]:null,admin?async()=>{
+      if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'staff',p.id));load();}
+    }:null,p.id));
+  });
+}
+// Basılı tutup sürükleyerek sıralama (sadece admin/owner)
+async function saveOrder(){
+  const ids=[...document.querySelectorAll('#grid .dyn')].map(e=>e.dataset.id);
+  try{
+    await Promise.all(ids.map((id,i)=>updateDoc(doc(db,'staff',id),{order:(i+1)*1000})));
+    note(T('Sıra kaydedildi.','Order saved.'));
+  }catch(e){note(T('Sıra kaydedilemedi.','Could not save the order.'),true);console.error(e);}
+  load();
+}
+let sortable=null;
+if(typeof Sortable!=='undefined'){
+  sortable=Sortable.create($('grid'),{draggable:'.dyn',filter:'.xbtn',preventOnFilter:false,animation:150,
+    delay:250,delayOnTouchOnly:true,touchStartThreshold:6,ghostClass:'ghost',disabled:true,onEnd:saveOrder});
 }
 let sel=ICONS[0];
 function mark(){document.querySelectorAll('#ic .ic').forEach(b=>b.classList.toggle('on',b.dataset.k===sel));}
@@ -61,9 +85,11 @@ ICONS.forEach(k=>{const b=document.createElement('button');b.type='button';b.cla
 $('add').onclick=async()=>{
   const n=$('n').value.trim(),r=$('r').value.trim(),r2=$('r2').value.trim();
   if(!n){note(T('İsim gerekli.','Name is required.'),true);return;}
-  try{await addDoc(collection(db,'staff'),{name:n,icon:sel,role:r,roleEn:r2,createdAt:serverTimestamp()});$('n').value='';$('r').value='';$('r2').value='';note(T('Eklendi.','Added.'));load();}
+  try{await addDoc(collection(db,'staff'),{name:n,icon:sel,role:r,roleEn:r2,order:Date.now(),createdAt:serverTimestamp()});
+    $('n').value='';$('r').value='';$('r2').value='';note(T('Eklendi.','Added.'));load();}
   catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
 };
 load();
-watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});
+watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';
+  $('grid').classList.toggle('sortable-on',admin);if(sortable)sortable.option('disabled',!admin);load();});
 </script></body></html>

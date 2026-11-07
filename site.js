@@ -15,12 +15,12 @@
   };
   var links = [
     ['index.html','Ana Sayfa','Home'],
-    ['management.html','Management','Management'],
-    ['gallery.html','Gallery','Gallery'],
-    ['partnership.html','Partnership','Partnership'],
+    ['management.html','Yönetim','Management'],
+    ['gallery.html','Galeri','Gallery'],
+    ['partnership.html','Ortaklıklar','Partnership'],
     ['duyurular.html','Duyurular','Announcements'],
     ['cerez.html','Çerez Politikası','Cookie Policy'],
-    ['panel.html','Management Panel','Management Panel']
+    ['panel.html','Yönetim Paneli','Management Panel']
   ];
   var here = location.pathname.split('/').pop() || 'index.html';
   var nav = document.createElement('nav');
