@@ -103,3 +103,10 @@ html.mt-on,html.mt-on body{overflow:hidden}
 
 @keyframes flash{from{background:#5a1a1a}to{background:transparent}}
 tr.fresh td{animation:flash 4s ease-out}
+/* --- v3: düzenle/sil işaretleri sadece üzerine gelince görünsün --- */
+.xbtn,.ebtn{opacity:0;transition:opacity .15s}
+.gal div:hover .xbtn,.gal div:hover .ebtn,.pcard:hover .xbtn,.pcard:hover .ebtn,.staff:hover .xbtn,.staff:hover .ebtn,.xbtn:focus,.ebtn:focus{opacity:1}
+.ebtn{position:absolute;top:8px;right:42px;background:#2b6cd9;color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;z-index:2}
+@media (hover:none){.xbtn,.ebtn{opacity:1}}
+.mt-top{position:absolute;top:18px;right:22px;display:flex;gap:10px;align-items:center}
+.adm .keep{color:#888;font-size:12px;margin-bottom:8px}

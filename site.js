@@ -56,12 +56,13 @@
       if(block){
         if(!o){ o = document.createElement('div'); o.id = 'mtnc'; document.body.appendChild(o); }
         var t = /^\d{2}:\d{2}$/.test(mt.until) ? mt.until.replace(':','.') : '';
-        o.innerHTML = '<div class="mt-lang"><span data-l="tr">TR</span> | <span data-l="en">ENG</span></div>' +
+        var cur = document.documentElement.dataset.lang;
+        o.innerHTML = '<div class="mt-top"><div class="lang"><span data-l="tr" class="'+(cur==='tr'?'on':'')+'">TR</span><i></i><span data-l="en" class="'+(cur==='en'?'on':'')+'">ENG</span></div>' +
+          '<a class="gbtn" href="giris.html">'+bi('Giriş Yap','Log in')+'</a></div>' +
           '<div class="mt-in"><div class="mt-h">'+bi('BAKIMDAYIZ!','UNDER MAINTENANCE!')+'</div>' +
           '<p>'+bi('Sitemiz sizlere daha iyi hizmet verebilmek adına bakımdadır.','Our website is under maintenance to serve you better.')+'</p>' +
           (t ? '<p>'+bi('Tahmini olarak <b>'+t+'</b> saatinde açılacaktır.','It is estimated to reopen at <b>'+t+'</b>.')+'</p>' : '') +
-          '<p>'+bi('Anlayışınız için teşekkür ederiz.','Thank you for your understanding.')+'</p>' +
-          '<a class="mt-l" href="giris.html">'+bi('Yetkili Girişi','Staff Login')+'</a></div>';
+          '<p>'+bi('Anlayışınız için teşekkür ederiz.','Thank you for your understanding.')+'</p></div>';
         [].forEach.call(o.querySelectorAll('[data-l]'), function(b){ b.onclick = function(){ set(b.getAttribute('data-l')); }; });
       } else if(o){ o.remove(); }
       var bar = document.getElementById('mtbar');

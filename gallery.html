@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saygınlar Transport - Gallery</title><link rel="stylesheet" href="style.css"><script src="site.js"></script>
+<title>Saygınlar Transport - Gallery</title><link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
 </head>
 <body>
 <div style="padding:50px 5% 80px">
@@ -11,55 +12,49 @@
   <div id="drop"></div>
   <input id="u" data-ph-tr="ya da fotoğraf URL'si (https://...)" data-ph-en="or image URL (https://...)">
   <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
+  <div class="keep" style="margin-top:10px"><span class="tr">Bir fotoğrafı silmek için üzerine gel ve ✕ işaretine bas.</span><span class="en">To delete a photo, hover over it and press ✕.</span></div>
   <div id="m"></div>
 </div>
-<div class="gal" id="gal">
-<div><img loading="lazy" src="https://i.hizliresim.com/br864fb.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/ei9vibu.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/silde2u.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/t4pyhrz.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/gy920ru.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/pyxcgl8.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/blw39go.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/t2wvq1t.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/oo8uzu9.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/xgt88x6.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/78rgent.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/jbt8f6r.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/61gswph.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/nnwytxj.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/e7jjnk2f.png" alt="Saygınlar Convoy"></div>
-<div><img loading="lazy" src="https://i.hizliresim.com/giiydp9e.png" alt="Saygınlar Convoy"></div>
-</div></div>
+<div class="gal" id="gal"></div></div>
 <footer><span class="tr">&copy; 2026 Saygınlar Transport. Tüm Hakları Saklıdır.</span><span class="en">&copy; 2026 Saygınlar Transport. All Rights Reserved.</span></footer>
 <script type="module">
 import {makeDrop} from "./upload.js";
 import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
-const $=id=>document.getElementById(id);let admin=false;
+import {isSeeded,runSeed,ord} from "./seed.js";
+const $=id=>document.getElementById(id);let admin=false,seeding=false,seq=0;
 const drop=makeDrop($('drop'),1280);
+const defaults="br864fb ei9vibu silde2u t4pyhrz gy920ru pyxcgl8 blw39go t2wvq1t oo8uzu9 xgt88x6 78rgent jbt8f6r 61gswph nnwytxj e7jjnk2f giiydp9e".split(' ').map(i=>'https://i.hizliresim.com/'+i+'.png');
 const ok=u=>/^(https:\/\/|data:image\/jpeg;base64,).+/.test(u);
 function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
-let seq=0;
+function cardEl(url,id){
+  const c=document.createElement('div');
+  const i=document.createElement('img');i.loading='lazy';i.src=url;i.alt='Saygınlar Convoy';c.append(i);
+  if(id&&admin){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';x.title=T('Sil','Delete');
+    x.onclick=async()=>{if(confirm(T('Bu fotoğraf silinsin mi?','Delete this photo?'))){await deleteDoc(doc(db,'gallery',id));load();}};c.append(x);}
+  return c;
+}
 async function load(){
-  const my=++seq;
-  document.querySelectorAll('#gal .dyn').forEach(e=>e.remove());
+  const my=++seq;let rows=[];const seeded=await isSeeded('gallery');
   try{
     const s=await getDocs(query(collection(db,'gallery'),orderBy('createdAt','asc')));
-    if(my!==seq)return;
-    s.forEach(d=>{
-      const u=d.data().url;if(!ok(u))return;
-      const c=document.createElement('div');c.className='dyn';
-      const i=document.createElement('img');i.loading='lazy';i.src=u;i.alt='Saygınlar Convoy';c.append(i);
-      if(admin){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';
-        x.onclick=async()=>{if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'gallery',d.id));load();}};c.append(x);}
-      $('gal').append(c);
-    });
+    rows=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ord(a)-ord(b));
   }catch(e){console.error(e);}
+  if(my!==seq)return;
+  const g=$('gal');g.innerHTML='';
+  if(!seeded)defaults.forEach(u=>g.append(cardEl(u,null)));
+  rows.forEach(r=>{if(ok(r.url)&&(seeded||!String(r.id).startsWith('seed-')))g.append(cardEl(r.url,r.id));});
+  // Admin/owner ilk girişte eski fotoğrafları silinebilir hale getirir (tek seferlik)
+  if(admin&&!seeded&&!seeding){
+    seeding=true;
+    try{await runSeed('gallery',defaults.map((u,i)=>({id:'seed-'+String(i+1).padStart(2,'0'),data:{url:u,order:-1000000+i}})));
+      seeding=false;note(T('Eski fotoğraflar artık silinebilir.','Old photos can now be deleted.'));load();}
+    catch(e){seeding=false;console.error(e);}
+  }
 }
 $('add').onclick=async()=>{
   const u=drop.getData()||$('u').value.trim();
   if(!ok(u)){note(T('Bir fotoğraf sürükle ya da geçerli bir https:// adresi gir.','Drag a photo or enter a valid https:// URL.'),true);return;}
-  try{await addDoc(collection(db,'gallery'),{url:u,createdAt:serverTimestamp()});$('u').value='';drop.clear();note(T('Eklendi.','Added.'));load();}
+  try{await addDoc(collection(db,'gallery'),{url:u,order:Date.now(),createdAt:serverTimestamp()});$('u').value='';drop.clear();note(T('Eklendi.','Added.'));load();}
   catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
 };
 watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});

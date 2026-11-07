@@ -17,15 +17,21 @@ service cloud.firestore {
             || (u.matches('^data:image/jpeg;base64,.+') && u.size() <= 900000));
     }
     function txt(s, max) { return s is string && s.size() > 0 && s.size() <= max; }
+    // "alan varsa geçerli olmalı" yardımcıları
+    function optTxt(d, k, max) { return !(k in d) || txt(d[k], max); }
+    function optStr(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() <= max); }
+    function optOrder(d)       { return !('order' in d) || d.order is number; }
+    function okAge(d)          { return !('age' in d) || (d.age is int && d.age >= 10 && d.age <= 99); }
 
-    // Duyurular: herkes okur; editor/admin/owner ekler ve siler
+    // Duyurular: herkes okur; editor/admin/owner ekler ve siler. authorUid sadece panelde isme çevrilir.
     match /announcements/{id} {
       allow read: if true;
       allow create: if isEditor()
-        && request.resource.data.keys().hasOnly(['title', 'content', 'imageUrl', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'content', 'imageUrl', 'authorUid', 'createdAt'])
         && txt(request.resource.data.title, 120)
         && txt(request.resource.data.content, 3000)
         && (request.resource.data.imageUrl == '' || validUrl(request.resource.data.imageUrl))
+        && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.createdAt == request.time;
       allow delete: if isEditor();
       allow update: if false;
@@ -35,23 +41,29 @@ service cloud.firestore {
     match /partners/{id} {
       allow read: if true;
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['name', 'imageUrl', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'imageUrl', 'order', 'createdAt'])
         && txt(request.resource.data.name, 80)
         && validUrl(request.resource.data.imageUrl)
+        && request.resource.data.order is number
         && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'imageUrl', 'order'])
+        && optTxt(request.resource.data, 'name', 80)
+        && (!('imageUrl' in request.resource.data) || validUrl(request.resource.data.imageUrl))
+        && optOrder(request.resource.data);
       allow delete: if isAdmin();
-      allow update: if false;
     }
 
     // Galeri
     match /gallery/{id} {
       allow read: if true;
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['url', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['url', 'order', 'createdAt'])
         && validUrl(request.resource.data.url)
+        && request.resource.data.order is number
         && request.resource.data.createdAt == request.time;
-      allow delete: if isAdmin();
       allow update: if false;
+      allow delete: if isAdmin();
     }
 
     // Yönetim kadrosu
@@ -65,14 +77,18 @@ service cloud.firestore {
         && request.resource.data.roleEn is string && request.resource.data.roleEn.size() <= 120
         && request.resource.data.order is number
         && request.resource.data.createdAt == request.time;
-      allow delete: if isAdmin();
-      // Sadece sıra numarası (order) değiştirilebilir
       allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['order'])
-        && request.resource.data.order is number;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'icon', 'role', 'roleEn', 'order'])
+        && optTxt(request.resource.data, 'name', 80)
+        && (!('icon' in request.resource.data)
+            || request.resource.data.icon in ['fa-crown', 'fa-users', 'fa-code', 'fa-user-tie', 'fa-headset', 'fa-truck'])
+        && optStr(request.resource.data, 'role', 120)
+        && optStr(request.resource.data, 'roleEn', 120)
+        && optOrder(request.resource.data);
+      allow delete: if isAdmin();
     }
 
-    // Bakım modu: herkes okur (site bakımda mı bilsin), SADECE owner değiştirir
+    // Bakım modu: herkes okur, SADECE owner değiştirir
     match /settings/maintenance {
       allow read: if true;
       allow create, update: if isOwner()
@@ -82,6 +98,15 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow delete: if false;
     }
+    // Eski (koda gömülü) kartların veritabanına aktarıldığını gösteren işaretler
+    match /settings/{flag} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && flag in ['seed_staff', 'seed_partners', 'seed_gallery']
+        && request.resource.data.keys().hasOnly(['done', 'at'])
+        && request.resource.data.done == true
+        && request.resource.data.at == request.time;
+    }
 
     // Kullanıcılar ve roller
     match /users/{uid} {
@@ -90,13 +115,20 @@ service cloud.firestore {
       allow create: if signedIn() && request.auth.uid == uid
                     && request.resource.data.role == 'user'
                     && request.resource.data.keys().hasOnly(['email', 'role']);
-      // Rolü admin/owner değiştirir. OWNER rolündeki kişinin rolü panelden asla değiştirilemez.
+      // Admin/owner: başkasının rolünü, ismini ve yaşını değiştirir. OWNER'ın kaydı panelden değiştirilemez.
       // "owner" rolünü sadece bir owner verebilir.
       allow update: if isAdmin()
                     && resource.data.role != 'owner'
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'name', 'age'])
+                    && optTxt(request.resource.data, 'name', 40)
+                    && okAge(request.resource.data)
                     && (request.resource.data.role in ['user', 'editor', 'admin']
                         || (request.resource.data.role == 'owner' && isOwner()));
+      // Yetkililer (editor/admin/owner) sadece KENDİ isim ve yaşlarını değiştirebilir
+      allow update: if request.auth.uid == uid && isEditor()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'age'])
+                    && optTxt(request.resource.data, 'name', 40)
+                    && okAge(request.resource.data);
       allow delete: if false;
     }
   }

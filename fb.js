@@ -6,7 +6,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = A.getAuth(app);
 export const db = F.getFirestore(app);
 export const { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } = A;
-export const { doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, onSnapshot, serverTimestamp } = F;
+export const { doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, onSnapshot, serverTimestamp, writeBatch } = F;
 
 export const isAdminRole = r => r === "admin" || r === "owner";
 export const isStaffRole = r => r === "admin" || r === "owner" || r === "editor";

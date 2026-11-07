@@ -1,58 +1,95 @@
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saygınlar Transport - Partnerships</title><link rel="stylesheet" href="style.css"><script src="site.js"></script>
+<title>Saygınlar Transport - Partnerships</title><link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
 </head>
 <body>
 <div style="padding:40px 5% 60px;text-align:center">
 <div class="title" style="color:#cc0000;text-shadow:0 0 15px rgba(204,0,0,.5)"><span class="tr">STRATEJİK ORTAKLIKLAR</span><span class="en">STRATEGIC PARTNERSHIPS</span></div>
 <h2 style="letter-spacing:4px;color:#ccc;text-transform:uppercase;margin:5px 0 40px"><span class="tr">Birlikte Daha Güçlüyüz</span><span class="en">Stronger Together</span></h2>
 <div class="adm" id="adm" style="display:none">
-  <b><span class="tr">+ YENİ PARTNER EKLE</span><span class="en">+ ADD NEW PARTNER</span></b>
+  <b id="t-add"><span class="tr">+ YENİ PARTNER EKLE</span><span class="en">+ ADD NEW PARTNER</span></b>
+  <b id="t-edit" style="display:none"><span class="tr">✎ PARTNERİ DÜZENLE</span><span class="en">✎ EDIT PARTNER</span></b>
   <input id="n" maxlength="80" data-ph-tr="VTC ismi" data-ph-en="VTC name">
+  <div class="keep" id="keep" style="display:none"><span class="tr">Mevcut logo korunur; yeni logo seçersen değişir.</span><span class="en">The current logo is kept; choose a new one to replace it.</span></div>
   <div id="drop"></div>
   <input id="u" data-ph-tr="ya da logo URL'si (https://...)" data-ph-en="or logo URL (https://...)">
-  <button class="btn" id="add"><span class="tr">EKLE</span><span class="en">ADD</span></button>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn" id="add"></button>
+    <button class="btn gray" id="cancel" style="display:none"><span class="tr">VAZGEÇ</span><span class="en">CANCEL</span></button>
+  </div>
+  <div class="keep" style="margin-top:10px"><span class="tr">Düzenlemek ya da silmek için kartın üzerine gel.</span><span class="en">To edit or delete, hover over a card.</span></div>
   <div id="m"></div>
 </div>
-<div class="pgrid" id="pg">
-<div class="pcard"><img src="https://i.hizliresim.com/f6j577e.png" alt="Trakya Anadolu Lojistik"><span>Trakya Anadolu Lojistik</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/9p63b3u.jpg" alt="Fire Phoenix"><span>Fire Phoenix</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/bg8whxbz.png" alt="Northern Lights"><span>Northern Lights</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/nrb0a2sy.png" alt="Mileage Riot"><span>Mileage Riot</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/28ehpz3i.png" alt="Shakti Logistics"><span>Shakti Logistics</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/2yflqlds.png" alt="POLLITO PIO VTC"><span>POLLITO PIO VTC</span></div>
-<div class="pcard"><img src="https://i.hizliresim.com/fzx9j1rv.jpg" alt="Hort Trans Logistics Company"><span>Hort Trans Logistics Company</span></div>
-</div></div>
+<div class="pgrid" id="pg"></div></div>
 <script type="module">
 import {makeDrop} from "./upload.js";
-import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
-const $=id=>document.getElementById(id);let admin=false;
+import {db,collection,getDocs,query,orderBy,addDoc,deleteDoc,updateDoc,doc,serverTimestamp,watchRole,isAdminRole} from "./fb.js";
+import {isSeeded,runSeed,ord} from "./seed.js";
+const $=id=>document.getElementById(id);let admin=false,seeding=false,seq=0,editing=null;
 const drop=makeDrop($('drop'),420);
+const defaults=[
+["Trakya Anadolu Lojistik","https://i.hizliresim.com/f6j577e.png"],
+["Fire Phoenix","https://i.hizliresim.com/9p63b3u.jpg"],
+["Northern Lights","https://i.hizliresim.com/bg8whxbz.png"],
+["Mileage Riot","https://i.hizliresim.com/nrb0a2sy.png"],
+["Shakti Logistics","https://i.hizliresim.com/28ehpz3i.png"],
+["POLLITO PIO VTC","https://i.hizliresim.com/2yflqlds.png"],
+["Hort Trans Logistics Company","https://i.hizliresim.com/fzx9j1rv.jpg"]
+];
 const ok=u=>/^(https:\/\/|data:image\/jpeg;base64,).+/.test(u);
 function note(t,err){$('m').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('m').append(d);}
-let seq=0;
+function setMode(){const e=!!editing;
+  $('t-add').style.display=e?'none':'';$('t-edit').style.display=e?'':'none';
+  $('add').innerHTML=e?bi('KAYDET','SAVE'):bi('EKLE','ADD');$('cancel').style.display=e?'':'none';$('keep').style.display=e?'block':'none';}
+function endEdit(){editing=null;$('n').value='';$('u').value='';drop.clear();setMode();}
+function startEdit(p){editing=p;$('n').value=p.name;$('u').value='';drop.clear();setMode();$('adm').scrollIntoView({behavior:'smooth',block:'center'});}
+function cardEl(name,url,p){
+  const c=document.createElement('div');c.className='pcard';
+  const i=document.createElement('img');i.src=url;i.alt=name;
+  const n=document.createElement('span');n.textContent=name;c.append(i,n);
+  if(p&&admin){
+    const e=document.createElement('button');e.className='ebtn';e.textContent='✎';e.title=T('Düzenle','Edit');e.onclick=()=>startEdit(p);
+    const x=document.createElement('button');x.className='xbtn';x.textContent='✕';x.title=T('Sil','Delete');
+    x.onclick=async()=>{if(confirm(T('Bu partner silinsin mi?','Delete this partner?'))){await deleteDoc(doc(db,'partners',p.id));if(editing&&editing.id===p.id)endEdit();load();}};
+    c.append(e,x);
+  }
+  return c;
+}
 async function load(){
-  const my=++seq;
-  document.querySelectorAll('#pg .dyn').forEach(e=>e.remove());
+  const my=++seq;let rows=[];const seeded=await isSeeded('partners');
   try{
     const s=await getDocs(query(collection(db,'partners'),orderBy('createdAt','asc')));
-    if(my!==seq)return;
-    s.forEach(d=>{
-      const p=d.data();if(!ok(p.imageUrl))return;
-      const c=document.createElement('div');c.className='pcard dyn';
-      const i=document.createElement('img');i.src=p.imageUrl;i.alt=p.name;
-      const n=document.createElement('span');n.textContent=p.name;c.append(i,n);
-      if(admin){const x=document.createElement('button');x.className='xbtn';x.textContent='✕';
-        x.onclick=async()=>{if(confirm(T('Silinsin mi?','Delete this?'))){await deleteDoc(doc(db,'partners',d.id));load();}};c.append(x);}
-      $('pg').append(c);
-    });
+    rows=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ord(a)-ord(b));
   }catch(e){console.error(e);}
+  if(my!==seq)return;
+  const g=$('pg');g.innerHTML='';
+  if(!seeded)defaults.forEach(d=>g.append(cardEl(d[0],d[1],null)));
+  rows.forEach(p=>{if(ok(p.imageUrl)&&(seeded||!String(p.id).startsWith('seed-')))g.append(cardEl(p.name,p.imageUrl,p));});
+  if(admin&&!seeded&&!seeding){
+    seeding=true;
+    try{await runSeed('partners',defaults.map((d,i)=>({id:'seed-'+(i+1),data:{name:d[0],imageUrl:d[1],order:-1000000+i}})));
+      seeding=false;note(T('Eski partnerler artık düzenlenip silinebilir.','Old partners can now be edited and deleted.'));load();}
+    catch(e){seeding=false;console.error(e);}
+  }
 }
 $('add').onclick=async()=>{
   const n=$('n').value.trim(),u=drop.getData()||$('u').value.trim();
-  if(!n||!ok(u)){note(T('VTC ismi yaz ve logo sürükle ya da https:// adresi gir.','Enter a VTC name and drag a logo or enter an https:// URL.'),true);return;}
-  try{await addDoc(collection(db,'partners'),{name:n,imageUrl:u,createdAt:serverTimestamp()});$('n').value='';$('u').value='';drop.clear();note(T('Eklendi.','Added.'));load();}
-  catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);}
+  try{
+    if(editing){
+      const img=u||editing.imageUrl;
+      if(!n||!ok(img)){note(T('VTC ismi gerekli.','VTC name is required.'),true);return;}
+      await updateDoc(doc(db,'partners',editing.id),{name:n,imageUrl:img});
+      endEdit();note(T('Kaydedildi.','Saved.'));load();
+    }else{
+      if(!n||!ok(u)){note(T('VTC ismi yaz ve logo sürükle ya da https:// adresi gir.','Enter a VTC name and drag a logo or enter an https:// URL.'),true);return;}
+      await addDoc(collection(db,'partners'),{name:n,imageUrl:u,order:Date.now(),createdAt:serverTimestamp()});
+      $('n').value='';$('u').value='';drop.clear();note(T('Eklendi.','Added.'));load();
+    }
+  }catch(e){note(T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
 };
+$('cancel').onclick=endEdit;
+document.addEventListener('langchange',setMode);
+setMode();
 watchRole(r=>{admin=isAdminRole(r);$('adm').style.display=admin?'block':'none';load();});
 </script></body></html>
