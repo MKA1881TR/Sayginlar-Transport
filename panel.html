@@ -67,28 +67,37 @@ function note(el,t,err){el.innerHTML='';const d=document.createElement('div');d.
 let me=null,myRole=null,annRows=[];
 const drop=makeDrop($('a-drop'),1000);
 
+// Canlı güncelleme: yeni duyuru / yeni hesap / rol değişikliği olunca liste kendiliğinden yenilenir
+let unsubA=null,unsubU=null,userDocs=[],pending={},freshA=new Set(),freshU=new Set(),firstA=true,firstU=true;
+function stopLive(){if(unsubA){unsubA();unsubA=null;}if(unsubU){unsubU();unsubU=null;}firstA=firstU=true;}
+
 watchRole((role,user)=>{
-  if(!user){show('need-login');return;}
+  if(!user){stopLive();show('need-login');return;}
   me=user;myRole=role;
-  if(!isStaffRole(role)){$('who2').textContent=user.email;show('no-access');return;}
+  if(!isStaffRole(role)){stopLive();$('who2').textContent=user.email;show('no-access');return;}
   $('who').textContent=user.email+' ('+role+')';
-  show('panel');loadAnn();
-  if(isAdminRole(role)){$('admin-only').style.display='block';loadUsers();}
+  show('panel');startAnn();
+  if(isAdminRole(role)){$('admin-only').style.display='block';startUsers();}
   $('owner-only').style.display=role==='owner'?'block':'none';
   if(role==='owner')startMt();
 });
 
-async function loadAnn(){
-  const snap=await getDocs(query(collection(db,"announcements"),orderBy("createdAt","desc")));
-  annRows=snap.docs;renderAnn();
+function startAnn(){
+  if(unsubA)return;
+  unsubA=onSnapshot(query(collection(db,"announcements"),orderBy("createdAt","desc")),snap=>{
+    if(!firstA)snap.docChanges().forEach(c=>{if(c.type==='added')freshA.add(c.doc.id);});
+    firstA=false;annRows=snap.docs;renderAnn();
+  },e=>console.error(e));
 }
 function renderAnn(){
   const tb=$('a-rows');tb.innerHTML='';
   annRows.forEach(d=>{const a=d.data(),tr=document.createElement('tr');
+    if(freshA.has(d.id))tr.className='fresh';
     cell(tr,a.createdAt?fmt(a.createdAt.toDate()):'');cell(tr,a.title);
     const td=document.createElement('td');const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Sil','Delete');
-    b.onclick=async()=>{if(confirm(T('Bu duyuru silinsin mi?','Delete this announcement?'))){await deleteDoc(doc(db,"announcements",d.id));loadAnn();}};
+    b.onclick=async()=>{if(confirm(T('Bu duyuru silinsin mi?','Delete this announcement?'))){await deleteDoc(doc(db,"announcements",d.id));}};
     td.append(b);tr.append(td);tb.append(tr);});
+  freshA.clear();
 }
 $('a-add').onclick=async()=>{
   const t=$('a-title').value.trim(),c=$('a-body').value.trim(),img=drop.getData()||$('a-img').value.trim();
@@ -96,30 +105,42 @@ $('a-add').onclick=async()=>{
   if(img&&!/^(https:\/\/|data:image\/jpeg;base64,).+/.test(img)){note($('a-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return;}
   try{await addDoc(collection(db,"announcements"),{title:t,content:c,imageUrl:img,createdAt:serverTimestamp()});
     $('a-title').value='';$('a-body').value='';$('a-img').value='';drop.clear();
-    note($('a-msg'),T('Duyuru yayınlandı.','Announcement published.'));loadAnn();}
+    note($('a-msg'),T('Duyuru yayınlandı.','Announcement published.'));}
   catch(e){note($('a-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
 };
 
-async function loadUsers(){
+function startUsers(){
+  if(unsubU)return;
+  unsubU=onSnapshot(collection(db,"users"),snap=>{
+    if(!firstU)snap.docChanges().forEach(c=>{if(c.type==='added')freshU.add(c.doc.id);});
+    firstU=false;userDocs=snap.docs;renderUsers();
+  },e=>console.error(e));
+}
+function renderUsers(){
   const tb=$('u-rows');tb.innerHTML='';
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{const u=d.data(),tr=document.createElement('tr');cell(tr,u.email);
+  const docs=userDocs.slice().sort((x,y)=>String(x.data().email||'').localeCompare(String(y.data().email||'')));
+  docs.forEach(d=>{const u=d.data(),tr=document.createElement('tr');
+    if(freshU.has(d.id))tr.className='fresh';
+    cell(tr,u.email);
     const td=document.createElement('td'),t2=document.createElement('td');
     if(u.role==='owner'){td.innerHTML='<b>owner</b> <span class="lock">🔒</span>';}
     else if(d.id===me.uid){td.textContent=u.role;t2.innerHTML=bi('(sen)','(you)');}
     else{
       const sel=document.createElement('select');sel.style.margin='0';
       const opts=['user','editor','admin'];if(myRole==='owner')opts.push('owner');
-      opts.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;if(r===u.role)o.selected=true;sel.append(o);});
+      opts.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;sel.append(o);});
+      sel.value=pending[d.id]||u.role;   // yarım kalmış seçim canlı yenilemede kaybolmasın
+      sel.onchange=()=>{if(sel.value===u.role)delete pending[d.id];else pending[d.id]=sel.value;};
       td.append(sel);
       const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Kaydet','Save');
       b.onclick=async()=>{
-        try{await updateDoc(doc(db,"users",d.id),{role:sel.value});b.innerHTML='✔';}
+        try{await updateDoc(doc(db,"users",d.id),{role:sel.value});delete pending[d.id];note($('u-msg'),T('Rol kaydedildi.','Role saved.'));}
         catch(e){note($('u-msg'),T('Bu rolü değiştirme yetkin yok.','You cannot change this role.'),true);}
       };
       t2.append(b);
     }
     tr.append(td,t2);tb.append(tr);});
+  freshU.clear();
 }
 // ---- Bakım modu (sadece owner) ----
 let mtState={on:false,until:''},mtStarted=false;

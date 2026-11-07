@@ -42,7 +42,8 @@ th,td{padding:10px;border:1px solid #444;text-align:left;font-size:14px;vertical
 .pcard span{color:#000;font-weight:900;text-transform:uppercase;letter-spacing:1px}
 .ann{background:#1a1a1a;border:1px solid #333;border-left:4px solid #cc0000;border-radius:6px;padding:20px;margin-bottom:18px}
 .ann h3{margin:0 0 6px;color:#fff}.ann small{color:#888}.ann p{white-space:pre-wrap;line-height:1.7;color:#e0e0e0}
-.hero{min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),url('https://i.hizliresim.com/br864fb.png') center/cover}
+:root{--hero:url('https://i.hizliresim.com/br864fb.png')} /* ana sayfa + bakım ekranı arka plan fotoğrafı (tek yerden değişir) */
+.hero{min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),var(--hero) center/cover}
 .hero h1{font-size:44px;margin:0 0 12px}
 .policy h2{font-size:18px;color:#cc0000;text-transform:uppercase;margin-top:30px;border-left:3px solid #cc0000;padding-left:10px}
 .policy p,.policy li{color:#e0e0e0;line-height:1.7;font-size:15px}
@@ -89,8 +90,8 @@ footer{text-align:center;color:#555;font-size:12px;padding:30px 0;background:#14
 
 /* --- bakım modu --- */
 html.mt-on,html.mt-on body{overflow:hidden}
-#mtnc{position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
-.mt-in{max-width:680px}
+#mtnc{position:fixed;inset:0;background-color:#0a0a0a;background-image:linear-gradient(rgba(0,0,0,.58),rgba(0,0,0,.58)),var(--hero);background-position:center;background-size:cover;z-index:99999;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.mt-in{max-width:680px;text-shadow:0 2px 14px rgba(0,0,0,.95)}
 .mt-h{font-family:'Impact',sans-serif;font-size:clamp(44px,10vw,100px);color:#cc0000;letter-spacing:3px;text-shadow:0 0 30px rgba(204,0,0,.6);margin-bottom:22px}
 .mt-in p{color:#ddd;font-size:18px;line-height:1.7;margin:10px 0}
 .mt-in b{color:#fff}
@@ -99,3 +100,6 @@ html.mt-on,html.mt-on body{overflow:hidden}
 .mt-lang{position:absolute;top:18px;right:22px;color:#888;font-weight:bold;font-size:14px}
 .mt-lang span{cursor:pointer}.mt-lang span:hover{color:#fff}
 #mtbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#cc0000;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:bold;z-index:950;box-shadow:0 4px 15px rgba(0,0,0,.5)}
+
+@keyframes flash{from{background:#5a1a1a}to{background:transparent}}
+tr.fresh td{animation:flash 4s ease-out}
