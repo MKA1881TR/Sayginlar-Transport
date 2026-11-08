@@ -1,5 +1,6 @@
 // Ortak menü, TR/ENG dili ve giriş butonu. Her sayfada <script src="site.js"></script> yeterli.
 (function(){
+  var ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = 'manifest.webmanifest'; document.head.appendChild(ml);
   var lang = localStorage.getItem('lang') || 'tr';
   document.documentElement.dataset.lang = lang;
   // yardımcılar (diğer sayfalar kullanır)
@@ -29,7 +30,7 @@
     links.map(function(l){
       return '<li><a class="l'+((here||'index').replace('.html','')===l[0].replace('.html','')?' active':'')+'" href="'+l[0]+'">'+bi(l[1],l[2])+'</a></li>';
     }).join('') +
-    '<li class="tools"><div class="lang"><span id="bt">TR</span><i></i><span id="be">ENG</span></div>' +
+    '<li class="tools"><button class="bell" id="bellbtn" type="button">🔔</button><div class="lang"><span id="bt">TR</span><i></i><span id="be">ENG</span></div>' +
     '<a class="gbtn" id="authbtn" href="giris.html">'+bi('Giriş Yap','Log in')+'</a></li></ul>';
   document.addEventListener('DOMContentLoaded', function(){
     document.body.insertBefore(nav, document.body.firstChild);
@@ -44,6 +45,28 @@
     document.getElementById('bt').onclick = function(){set('tr')};
     document.getElementById('be').onclick = function(){set('en')};
     set(lang);
+    // ---- Bildirim zili ----
+    var bell = document.getElementById('bellbtn');
+    function paintBell(){
+      var on = localStorage.getItem('push')==='1' && window.Notification && Notification.permission==='granted';
+      bell.classList.toggle('on', !!on);
+      bell.title = on ? T('Bildirimler açık (kapatmak için tıkla)','Notifications are on (click to turn off)') : T('Duyuru bildirimlerini aç','Turn on announcement notifications');
+    }
+    paintBell(); document.addEventListener('langchange', paintBell);
+    bell.onclick = function(){
+      import('./push.js').then(async function(p){
+        var st = await p.pushState();
+        if(st==='unsupported'){ alert(T('Bu tarayıcı bildirimleri desteklemiyor. iPhone kullanıyorsan önce siteyi "Ana Ekrana Ekle" ile kurman gerekir.','This browser does not support notifications. On iPhone, add the site to the Home Screen first.')); return; }
+        if(st==='denied'){ alert(T('Bildirimler tarayıcıdan engellenmiş. Adres çubuğundaki kilit simgesinden izin ver.','Notifications are blocked. Allow them from the lock icon in the address bar.')); return; }
+        if(st==='on'){ if(confirm(T('Bildirimler kapatılsın mı?','Turn notifications off?'))){ await p.disablePush(); paintBell(); } return; }
+        try{
+          var r = await p.enablePush();
+          if(r==='denied') alert(T('Bildirim izni verilmedi.','Notification permission was not granted.'));
+          else alert(T('Bildirimler açıldı! 🔔 Yeni duyurular geldiğinde haber alacaksın.','Notifications are on! 🔔 You will be notified about new announcements.'));
+        }catch(e){ console.error(e); alert(T('Bildirim servisi şu an kullanılamıyor.','The notification service is not available right now.')); }
+        paintBell();
+      }).catch(function(e){ console.error(e); alert(T('Bildirim servisi şu an kullanılamıyor.','The notification service is not available right now.')); });
+    };
     // ---- Bakım modu: owner açar, yetkili olmayanlar siteyi göremez ----
     var mt = {on:false, until:''}, isStaff = false;
     var exempt = /^giris(\.html)?$/.test(here);   // giriş sayfası açık kalır ki yetkililer girebilsin
