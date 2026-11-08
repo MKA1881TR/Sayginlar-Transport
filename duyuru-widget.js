@@ -13,9 +13,10 @@ function render(){
   body.innerHTML='';
   items.forEach(a=>{
     const d=document.createElement('div');d.className='wd-i';
-    const t=document.createElement('b');t.textContent=a.title;
+    const t=document.createElement('b');t.textContent=T(a.title,a.titleEn||a.title);
     const s=document.createElement('div');const sm=document.createElement('small');sm.textContent=a.createdAt?fmt(a.createdAt.toDate()):'';s.append(sm);
-    const p=document.createElement('p');p.textContent=a.content.length>140?a.content.slice(0,140)+'…':a.content;
+    const ct=T(a.content,a.contentEn||a.content);
+    const p=document.createElement('p');p.textContent=ct.length>140?ct.slice(0,140)+'…':ct;
     d.append(t,s,p);
     if(a.imageUrl&&/^(https:\/\/|data:image\/jpeg;base64,)/.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt='';i.loading='lazy';d.append(i);}
     body.append(d);

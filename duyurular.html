@@ -17,11 +17,11 @@ function render(){
   if(!rows.length){list.innerHTML='<div class="msg">'+bi('Henüz duyuru yok.','No announcements yet.')+'</div>';return;}
   rows.forEach(a=>{
     const el=document.createElement('div');el.className='ann';
-    const h=document.createElement('h3');h.textContent=a.title;
+    const h=document.createElement('h3');h.textContent=T(a.title,a.titleEn||a.title);
     const s=document.createElement('small');s.textContent=a.createdAt?fmt(a.createdAt.toDate()):'';
-    const p=document.createElement('p');p.textContent=a.content;
+    const p=document.createElement('p');p.textContent=T(a.content,a.contentEn||a.content);
     el.append(h,s,p);
-    if(a.imageUrl&&/^(https:\/\/|data:image\/jpeg;base64,)/.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt=a.title;i.loading='lazy';el.append(i);}
+    if(a.imageUrl&&/^(https:\/\/|data:image\/jpeg;base64,)/.test(a.imageUrl)){const i=document.createElement('img');i.src=a.imageUrl;i.alt=T(a.title,a.titleEn||a.title);i.loading='lazy';el.append(i);}
     list.append(el);
   });
 }

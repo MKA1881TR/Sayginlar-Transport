@@ -32,8 +32,17 @@
     <p style="color:#888;font-size:13px"><span class="tr">İpucu: Admin/owner olarak giriş yapınca Management, Gallery ve Partnership sayfalarında "Yeni Ekle" kutusu görünür; kartların üzerine gelince düzenle/sil işaretleri çıkar.</span><span class="en">Tip: when logged in as admin/owner, an "Add" box appears on the Management, Gallery and Partnership pages; hover over cards to see edit/delete icons.</span></p>
 
     <h2><span class="tr">Yeni Duyuru</span><span class="en">New Announcement</span></h2>
+    <div style="color:#cc0000;font-size:12px;font-weight:bold;letter-spacing:1px;margin-top:6px"><span class="tr">TÜRKÇE</span><span class="en">TURKISH</span></div>
     <input id="a-title" maxlength="120" data-ph-tr="Başlık" data-ph-en="Title">
     <textarea id="a-body" maxlength="3000" data-ph-tr="İçerik" data-ph-en="Content"></textarea>
+    <div style="color:#cc0000;font-size:12px;font-weight:bold;letter-spacing:1px;margin-top:6px"><span class="tr">İNGİLİZCE</span><span class="en">ENGLISH</span> <span style="color:#888;font-weight:normal;letter-spacing:0"><span class="tr">(otomatik çevrilir, istersen düzenleyebilirsin)</span><span class="en">(translated automatically, you can edit it)</span></span></div>
+    <input id="a-title-en" maxlength="120" data-ph-tr="Başlık (İngilizce)" data-ph-en="Title (English)">
+    <textarea id="a-body-en" maxlength="3000" data-ph-tr="İçerik (İngilizce)" data-ph-en="Content (English)"></textarea>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <button class="btn small gray" id="a-tr" type="button"><span class="tr">🌐 Türkçeden İngilizceye çevir</span><span class="en">🌐 Translate Turkish → English</span></button>
+      <label style="color:#ccc;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center"><input type="checkbox" id="a-autotr" checked style="width:auto;margin:0"><span class="tr">İngilizce boşsa yayınlarken otomatik çevir</span><span class="en">Auto-translate on publish if English is empty</span></label>
+    </div>
+    <div id="a-trmsg"></div>
     <div id="a-drop"></div>
     <input id="a-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
     <label style="display:flex;gap:8px;align-items:center;color:#ccc;font-size:14px;margin:4px 0 12px;cursor:pointer"><input type="checkbox" id="a-push" checked style="width:auto;margin:0"><span class="tr">🔔 Bildirimleri açmış ziyaretçilere bildirim de gönder</span><span class="en">🔔 Also send a notification to visitors who turned them on</span></label>
@@ -72,6 +81,7 @@
 </div>
 <script type="module">
 import {makeDrop} from "./upload.js";
+import {translateTrEn} from "./translate.js";
 import {db,watchRole,setDoc,onSnapshot,collection,addDoc,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
@@ -130,19 +140,53 @@ function renderAnn(){
   const tb=$('a-rows');tb.innerHTML='';
   annRows.forEach(d=>{const a=d.data(),tr=document.createElement('tr');
     if(freshA.has(d.id))tr.className='fresh';
-    cell(tr,a.createdAt?fmt(a.createdAt.toDate()):'');cell(tr,a.title);cell(tr,label(people.get(a.authorUid)));
+    cell(tr,a.createdAt?fmt(a.createdAt.toDate()):'');cell(tr,T(a.title,a.titleEn||a.title)+(a.titleEn||a.contentEn?'  • EN':''));cell(tr,label(people.get(a.authorUid)));
     const td=document.createElement('td');const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Sil','Delete');
     b.onclick=async()=>{if(confirm(T('Bu duyuru silinsin mi?','Delete this announcement?'))){await deleteDoc(doc(db,"announcements",d.id));}};
     td.append(b);tr.append(td);tb.append(tr);});
   freshA.clear();
+}
+const trStatus=s=>note($('a-trmsg'),T('Çeviri modeli indiriliyor… ','Downloading translation model… ')+s);
+async function doTranslate(){
+  const t=$('a-title').value.trim(),c=$('a-body').value.trim();
+  if(!t&&!c){note($('a-trmsg'),T('Önce Türkçe başlık ve içerik yaz.','Write the Turkish title and content first.'),true);return false;}
+  note($('a-trmsg'),T('Çevriliyor…','Translating…'));
+  try{
+    if(t)$('a-title-en').value=await translateTrEn(t,trStatus);
+    if(c)$('a-body-en').value=await translateTrEn(c,trStatus);
+    note($('a-trmsg'),T('Çeviri hazır. Kontrol edip istersen düzenleyebilirsin.','Translation ready. Review it and edit if you like.'));
+    return true;
+  }catch(e){console.error(e);note($('a-trmsg'),T('Otomatik çeviri yapılamadı','Automatic translation failed')+' ['+(e.message||e)+']',true);return false;}
+}
+$('a-tr').onclick=async()=>{$('a-tr').disabled=true;await doTranslate();$('a-tr').disabled=false;};
+// Yayınlarken İngilizce boşsa otomatik çevir; olmazsa sadece Türkçe yayınlamak için onay iste
+async function ensureEn(t,c){
+  let te=$('a-title-en').value.trim(),ce=$('a-body-en').value.trim();
+  if(!$('a-autotr').checked||((!t||te)&&(!c||ce)))return [te,ce];
+  note($('a-trmsg'),T('Çevriliyor…','Translating…'));
+  try{
+    if(t&&!te){te=await translateTrEn(t,trStatus);$('a-title-en').value=te;}
+    if(c&&!ce){ce=await translateTrEn(c,trStatus);$('a-body-en').value=ce;}
+    $('a-trmsg').innerHTML='';
+  }catch(e){
+    console.error(e);
+    note($('a-trmsg'),T('Otomatik çeviri yapılamadı','Automatic translation failed')+' ['+(e.message||e)+']',true);
+    if(!confirm(T('Çeviri yapılamadı. Duyuru sadece Türkçe olarak yayınlansın mı?','Translation failed. Publish in Turkish only?')))return null;
+  }
+  return [te,ce];
 }
 $('a-add').onclick=async()=>{
   const t=$('a-title').value.trim(),c=$('a-body').value.trim(),img=drop.getData()||$('a-img').value.trim();
   if(!myProf.name||!myProf.age){note($('a-msg'),T('Önce yukarıdaki "Profilim" bölümüne isim ve yaşını kaydet.','First save your name and age in the "My Profile" section above.'),true);return;}
   if(!t||!c){note($('a-msg'),T('Başlık ve içerik gerekli.','Title and content are required.'),true);return;}
   if(img&&!/^(https:\/\/|data:image\/jpeg;base64,).+/.test(img)){note($('a-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return;}
-  try{await addDoc(collection(db,"announcements"),{title:t,content:c,imageUrl:img,authorUid:me.uid,createdAt:serverTimestamp()});
-    $('a-title').value='';$('a-body').value='';$('a-img').value='';drop.clear();
+  $('a-add').disabled=true;
+  const en=await ensureEn(t,c);
+  $('a-add').disabled=false;
+  if(!en)return;
+  const [te,ce]=en;
+  try{await addDoc(collection(db,"announcements"),{title:t,content:c,titleEn:te,contentEn:ce,imageUrl:img,authorUid:me.uid,createdAt:serverTimestamp()});
+    $('a-title').value='';$('a-body').value='';$('a-title-en').value='';$('a-body-en').value='';$('a-img').value='';drop.clear();
     note($('a-msg'),T('Duyuru yayınlandı.','Announcement published.'));
     if($('a-push').checked)sendPush(t,c,img);}
   catch(e){note($('a-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}

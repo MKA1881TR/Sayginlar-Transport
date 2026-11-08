@@ -27,9 +27,11 @@ service cloud.firestore {
     match /announcements/{id} {
       allow read: if true;
       allow create: if isEditor()
-        && request.resource.data.keys().hasOnly(['title', 'content', 'imageUrl', 'authorUid', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'content', 'titleEn', 'contentEn', 'imageUrl', 'authorUid', 'createdAt'])
         && txt(request.resource.data.title, 120)
         && txt(request.resource.data.content, 3000)
+        && optStr(request.resource.data, 'titleEn', 120)
+        && optStr(request.resource.data, 'contentEn', 3000)
         && (request.resource.data.imageUrl == '' || validUrl(request.resource.data.imageUrl))
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.createdAt == request.time;
