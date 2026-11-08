@@ -126,3 +126,12 @@ tr.fresh td{animation:flash 4s ease-out}
 .social a.dc:hover{background:#5865f2;border-color:#5865f2}
 .social a.web:hover{background:#cc0000;border-color:#cc0000}
 .sfoot .copy{margin-top:12px;font-size:12px;color:#777}
+
+/* --- yasal bağlantılar + discord butonu --- */
+.flinks{margin-top:16px;display:flex;gap:6px 20px;justify-content:center;flex-wrap:wrap}
+.flinks a{color:#aaa;font-size:13px;text-decoration:none}
+.flinks a:hover{color:#fff;text-decoration:underline}
+.btn.dbtn{background:#5865f2}
+.btn.dbtn:hover{background:#6c78f5}
+.policy ul{padding-left:22px}
+.policy h3{color:#fff}

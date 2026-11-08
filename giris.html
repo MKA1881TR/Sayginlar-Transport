@@ -11,6 +11,11 @@
   </div>
   <input type="email" id="email" data-ph-tr="E-posta" data-ph-en="Email" autocomplete="email">
   <input type="password" id="pass" data-ph-tr="Şifre (en az 6 karakter)" data-ph-en="Password (min 6 characters)" autocomplete="current-password">
+  <label id="agree-row" style="display:none;gap:8px;align-items:flex-start;color:#ccc;font-size:13px;line-height:1.5;margin:4px 0 12px;cursor:pointer">
+    <input type="checkbox" id="agree" style="width:auto;margin:3px 0 0">
+    <span class="tr">En az 16 yaşında olduğumu, <a href="hizmet-sartlari.html" target="_blank" rel="noopener">Hizmet Şartları</a>'nı ve <a href="gizlilik.html" target="_blank" rel="noopener">Gizlilik Politikası</a>'nı okuyup kabul ettiğimi onaylıyorum.</span>
+    <span class="en">I confirm that I am at least 16 years old and that I have read and accept the <a href="hizmet-sartlari.html" target="_blank" rel="noopener">Terms of Service</a> and the <a href="gizlilik.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+  </label>
   <button class="btn" id="go" style="width:100%"></button>
   <p style="text-align:center"><a href="#" id="reset"><span class="tr">Şifremi unuttum</span><span class="en">Forgot password</span></a></p>
   <div id="msg"></div>
@@ -20,7 +25,8 @@ import {auth,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPassw
 const $=id=>document.getElementById(id);let mode='login';
 function say(t,err){$('msg').innerHTML='';const d=document.createElement('div');d.className='msg'+(err?' err':'');d.textContent=t;$('msg').append(d);}
 function setMode(m){mode=m;$('go').innerHTML=m==='login'?bi('GİRİŞ YAP','LOG IN'):bi('KAYIT OL','SIGN UP');
-  $('t-login').style.background=m==='login'?'#cc0000':'#444';$('t-reg').style.background=m==='reg'?'#cc0000':'#444';}
+  $('t-login').style.background=m==='login'?'#cc0000':'#444';$('t-reg').style.background=m==='reg'?'#cc0000':'#444';
+  $('agree-row').style.display=m==='reg'?'flex':'none';}
 $('t-login').onclick=()=>setMode('login');$('t-reg').onclick=()=>setMode('reg');setMode('login');
 const errs={
  'auth/invalid-credential':['E-posta veya şifre hatalı.','Wrong email or password.'],
@@ -30,6 +36,7 @@ const errs={
  'auth/too-many-requests':['Çok fazla deneme, biraz bekle.','Too many attempts, wait a bit.']};
 const em=x=>{const e=errs[x.code];return e?T(e[0],e[1]):T('Hata: ','Error: ')+x.code;};
 $('go').onclick=async()=>{
+  if(mode==='reg'&&!$('agree').checked){say(T('Devam etmek için onay kutusunu işaretlemelisin.','Please tick the checkbox to continue.'),true);return;}
   try{
     const e=$('email').value.trim(),p=$('pass').value;
     const cred=mode==='login'?await signInWithEmailAndPassword(auth,e,p):await createUserWithEmailAndPassword(auth,e,p);

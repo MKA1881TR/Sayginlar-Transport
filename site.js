@@ -20,6 +20,7 @@
   };
   var links = [
     ['index.html','Ana Sayfa','Home'],
+    ['hakkimizda.html','Hakkımızda','About Us'],
     ['management.html','Yönetim','Management'],
     ['gallery.html','Galeri','Gallery'],
     ['partnership.html','Ortaklıklar','Partnership'],
@@ -45,8 +46,22 @@
       '<a class="yt" href="https://www.youtube.com/@SAYGINLARTRANSPORT" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>' +
       '<a class="web" href="https://sayginlar-transport.vercel.app/" target="_blank" rel="noopener noreferrer" title="Website" aria-label="Website"><i class="fa-solid fa-globe"></i></a>' +
       '<a class="dc" href="https://discord.gg/CbAbzJt6Pu" target="_blank" rel="noopener noreferrer" title="Discord" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>' +
+      '</div><div class="flinks">' +
+      '<a href="hakkimizda.html">'+bi('Hakkımızda','About Us')+'</a>' +
+      '<a href="hizmet-sartlari.html">'+bi('Hizmet Şartları','Terms of Service')+'</a>' +
+      '<a href="gizlilik.html">'+bi('Gizlilik Politikası','Privacy Policy')+'</a>' +
+      '<a href="cerez.html">'+bi('Çerez Politikası','Cookie Policy')+'</a>' +
       '</div><div class="copy">'+bi('&copy; 2026 Saygınlar Transport. Tüm Hakları Saklıdır.','&copy; 2026 Saygınlar Transport. All Rights Reserved.')+'</div>';
     document.body.appendChild(ft);
+    // Ana sayfada herkese açık Discord butonu
+    var jb = document.getElementById('join');
+    if(jb){
+      var db = document.createElement('a'); db.className = 'btn dbtn';
+      db.href = 'https://discord.gg/CbAbzJt6Pu'; db.target = '_blank'; db.rel = 'noopener noreferrer';
+      db.style.cssText = 'padding:14px 40px;font-size:16px;margin-top:14px';
+      db.innerHTML = '<i class="fa-brands fa-discord"></i> ' + bi("DISCORD'A KATIL",'JOIN OUR DISCORD');
+      jb.parentNode.insertBefore(db, jb.nextSibling);
+    }
     function set(l){
       localStorage.setItem('lang', l);
       document.documentElement.dataset.lang = l;
