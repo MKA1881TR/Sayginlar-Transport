@@ -1,6 +1,7 @@
 // Türkçe -> İngilizce otomatik çeviri (panelde kullanılır).
-// 1) Chrome'un kendi çeviri özelliği (cihazda çalışır, ücretsiz, sınırsız; ilk kullanımda küçük bir dil paketi indirir)
-// 2) Olmazsa ücretsiz MyMemory servisi (günlük sınırı var)
+// 1) Google Çeviri (anahtarsız, resmi olmayan ücretsiz adres)
+// 2) Olmazsa Chrome'un kendi çeviri özelliği (cihazda çalışır; ilk kullanımda küçük bir dil paketi indirir)
+// 3) Olmazsa ücretsiz MyMemory servisi (günlük sınırı var)
 const enc = new TextEncoder();
 const bytes = s => enc.encode(s).length;
 
@@ -30,6 +31,19 @@ async function myMemory(s){
   return out.join(' ');
 }
 
+let googleDown = false;
+async function google(s){
+  const out = [];
+  for(const p of chunks(s, 1200)){
+    const r = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=en&dt=t&q=' + encodeURIComponent(p));
+    if(!r.ok) throw new Error('google ' + r.status);
+    const j = await r.json();
+    if(!Array.isArray(j) || !Array.isArray(j[0])) throw new Error('google biçim');
+    out.push(j[0].map(x => (x && x[0]) || '').join(''));
+  }
+  return out.join(' ');
+}
+
 let builtin; // undefined = henüz denenmedi, null = yok
 async function getBuiltin(onStatus){
   if(builtin !== undefined) return builtin;
@@ -48,6 +62,7 @@ async function getBuiltin(onStatus){
 }
 
 async function oneLine(s, onStatus){
+  if(!googleDown){ try{ return await google(s); }catch(e){ googleDown = true; console.warn('Google çeviri kullanılamadı', e); } }
   const b = await getBuiltin(onStatus);
   if(b){ try{ return await b(s); }catch(e){ console.warn(e); } }
   return await myMemory(s);
