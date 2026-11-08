@@ -25,7 +25,11 @@
     ['gallery.html','Galeri','Gallery'],
     ['partnership.html','Ortaklıklar','Partnership'],
     ['duyurular.html','Duyurular','Announcements'],
-    ['cerez.html','Çerez Politikası','Cookie Policy'],
+    { dd:true, tr:'Yasal', en:'Legal', sub:[
+      ['gizlilik.html','Gizlilik Politikası','Privacy Policy'],
+      ['cerez.html','Çerez Politikası','Cookie Policy'],
+      ['hizmet-sartlari.html','Hizmet Şartları','Terms of Service']
+    ]},
     ['panel.html','Yönetim Paneli','Management Panel']
   ];
   var here = location.pathname.split('/').pop() || 'index.html';
@@ -33,12 +37,24 @@
   nav.className = 'nav';
   nav.innerHTML = '<a class="brand" href="index.html">Saygınlar Transport</a><ul>' +
     links.map(function(l){
-      return '<li><a class="l'+((here||'index').replace('.html','')===l[0].replace('.html','')?' active':'')+'" href="'+l[0]+'">'+bi(l[1],l[2])+'</a></li>';
+      function isHere(h){ return (here||'index').replace('.html','')===h.replace('.html',''); }
+      if(l.dd){ // aşağı doğru açılan menü
+        var act = l.sub.some(function(x){ return isHere(x[0]); });
+        return '<li class="dd"><a class="l'+(act?' active':'')+'" href="#" aria-haspopup="true">'+bi(l.tr,l.en)+' <span class="car">▾</span></a><ul class="ddm">' +
+          l.sub.map(function(x){ return '<li><a'+(isHere(x[0])?' class="active"':'')+' href="'+x[0]+'">'+bi(x[1],x[2])+'</a></li>'; }).join('') + '</ul></li>';
+      }
+      return '<li><a class="l'+(isHere(l[0])?' active':'')+'" href="'+l[0]+'">'+bi(l[1],l[2])+'</a></li>';
     }).join('') +
     '<li class="tools"><button class="bell" id="bellbtn" type="button">🔔</button><div class="lang"><span id="bt">TR</span><i></i><span id="be">ENG</span></div>' +
     '<a class="gbtn" id="authbtn" href="giris.html">'+bi('Giriş Yap','Log in')+'</a></li></ul>';
   document.addEventListener('DOMContentLoaded', function(){
     document.body.insertBefore(nav, document.body.firstChild);
+    // Yasal menüsü: fareyle üzerine gelince açılır; dokunmatik ekranda tıklayınca aç/kapa
+    var ddLi = nav.querySelector('li.dd');
+    if(ddLi){
+      ddLi.querySelector('a.l').onclick = function(e){ e.preventDefault(); ddLi.classList.toggle('open'); };
+      document.addEventListener('click', function(e){ if(!ddLi.contains(e.target)) ddLi.classList.remove('open'); });
+    }
     // ---- Sosyal medya alt bilgisi (tüm sayfalar) ----
     var ft = document.createElement('footer'); ft.className = 'sfoot';
     ft.innerHTML = '<div class="social">' +
