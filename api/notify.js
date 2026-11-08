@@ -1,8 +1,8 @@
 // Duyuru yayınlanınca panelden çağrılır. Sadece editor/admin/owner gönderebilir (sunucuda doğrulanır).
-const getAdmin = require('../lib/admin');
 module.exports = async (req, res) => {
   if(req.method !== 'POST') return res.status(405).json({error:'method'});
   try{
+    const getAdmin = require('../lib/admin');
     const admin = getAdmin();
     const h = req.headers.authorization || '';
     const idToken = h.startsWith('Bearer ') ? h.slice(7) : '';
@@ -23,5 +23,8 @@ module.exports = async (req, res) => {
     if(typeof imageUrl === 'string' && /^https:\/\//.test(imageUrl) && imageUrl.length <= 500) msg.notification.imageUrl = imageUrl;
     await admin.messaging().send(msg);
     res.json({ok:true});
-  }catch(e){ console.error(e); res.status(500).json({error:'server'}); }
+  }catch(e){
+    console.error(e);
+    res.status(500).json({error:'server', code:String((e&&e.code)||''), detail:String((e&&e.message)||e).slice(0,200)});
+  }
 };

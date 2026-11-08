@@ -1,6 +1,10 @@
 // Ortak menü, TR/ENG dili ve giriş butonu. Her sayfada <script src="site.js"></script> yeterli.
 (function(){
   var ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = 'manifest.webmanifest'; document.head.appendChild(ml);
+  if(!document.querySelector('link[href*="font-awesome"]')){
+    var fa = document.createElement('link'); fa.rel = 'stylesheet';
+    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'; document.head.appendChild(fa);
+  }
   var lang = localStorage.getItem('lang') || 'tr';
   document.documentElement.dataset.lang = lang;
   // yardımcılar (diğer sayfalar kullanır)
@@ -34,6 +38,15 @@
     '<a class="gbtn" id="authbtn" href="giris.html">'+bi('Giriş Yap','Log in')+'</a></li></ul>';
   document.addEventListener('DOMContentLoaded', function(){
     document.body.insertBefore(nav, document.body.firstChild);
+    // ---- Sosyal medya alt bilgisi (tüm sayfalar) ----
+    var ft = document.createElement('footer'); ft.className = 'sfoot';
+    ft.innerHTML = '<div class="social">' +
+      '<a class="ig" href="https://www.instagram.com/sayginlartransport59/" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>' +
+      '<a class="yt" href="https://www.youtube.com/@SAYGINLARTRANSPORT" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>' +
+      '<a class="web" href="https://sayginlar-transport.vercel.app/" target="_blank" rel="noopener noreferrer" title="Website" aria-label="Website"><i class="fa-solid fa-globe"></i></a>' +
+      '<a class="dc" href="https://discord.gg/CbAbzJt6Pu" target="_blank" rel="noopener noreferrer" title="Discord" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>' +
+      '</div><div class="copy">'+bi('&copy; 2026 Saygınlar Transport. Tüm Hakları Saklıdır.','&copy; 2026 Saygınlar Transport. All Rights Reserved.')+'</div>';
+    document.body.appendChild(ft);
     function set(l){
       localStorage.setItem('lang', l);
       document.documentElement.dataset.lang = l;
@@ -63,7 +76,7 @@
           var r = await p.enablePush();
           if(r==='denied') alert(T('Bildirim izni verilmedi.','Notification permission was not granted.'));
           else alert(T('Bildirimler açıldı! 🔔 Yeni duyurular geldiğinde haber alacaksın.','Notifications are on! 🔔 You will be notified about new announcements.'));
-        }catch(e){ console.error(e); alert(T('Bildirim servisi şu an kullanılamıyor.','The notification service is not available right now.')); }
+        }catch(e){ console.error(e); alert(T('Bildirim servisi şu an kullanılamıyor.','The notification service is not available right now.')+' ['+(e&&e.message?e.message:e)+']'); }
         paintBell();
       }).catch(function(e){ console.error(e); alert(T('Bildirim servisi şu an kullanılamıyor.','The notification service is not available right now.')); });
     };

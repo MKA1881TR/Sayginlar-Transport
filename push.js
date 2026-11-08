@@ -19,7 +19,7 @@ export async function enablePush(){
   const token = await getToken(getMessaging(firebaseApp),{vapidKey:cfg.VAPID_KEY,serviceWorkerRegistration:reg});
   if(!token) throw new Error('token');
   const r = await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
-  if(!r.ok) throw new Error('api');
+  if(!r.ok){ let d=''; try{ const j=await r.json(); d=j.detail||j.error||''; }catch(_){} throw new Error('api '+r.status+(d?': '+d:'')); }
   localStorage.setItem('push','1'); localStorage.setItem('pushtoken',token);
   return 'on';
 }

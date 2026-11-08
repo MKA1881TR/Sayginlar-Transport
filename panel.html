@@ -153,11 +153,11 @@ async function sendPush(title,body,img){
     const tok=await me.getIdToken();
     const r=await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body:JSON.stringify({title:title,body:body.slice(0,180),imageUrl:/^https:\/\//.test(img)?img:''})});
-    if(!r.ok)throw new Error(r.status);
+    if(!r.ok){let j={};try{j=await r.json();}catch(_){}throw new Error(r.status+(j.detail?': '+j.detail:(j.error?': '+j.error:'')));}
     note($('a-msg'),T('Duyuru yayınlandı ve bildirim gönderildi. 🔔','Announcement published and notification sent. 🔔'));
   }catch(e){
     console.error(e);
-    note($('a-msg'),T('Duyuru yayınlandı ama bildirim gönderilemedi (bildirim servisi kurulu mu?).','Announcement published, but the notification could not be sent (is the notification service set up?).'),true);
+    note($('a-msg'),T('Duyuru yayınlandı ama bildirim gönderilemedi','Announcement published, but the notification could not be sent')+' ['+e.message+']',true);
   }
 }
 
