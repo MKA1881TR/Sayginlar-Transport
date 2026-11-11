@@ -22,6 +22,7 @@
 
     <h2><span class="tr">Profilim</span><span class="en">My Profile</span></h2>
     <p style="color:#888;font-size:13px"><span class="tr">Duyuru atarken panelde adın bu şekilde görünür (isim • yaş). Ziyaretçiler görmez.</span><span class="en">When you post an announcement, your name appears like this in the panel (name • age). Visitors cannot see it.</span></p>
+    <div id="p-info"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
       <input id="p-name" maxlength="40" style="flex:2;min-width:160px" data-ph-tr="İsim" data-ph-en="Name">
       <input id="p-age" maxlength="2" inputmode="numeric" style="flex:1;min-width:90px;max-width:120px" data-ph-tr="Yaş" data-ph-en="Age">
@@ -42,6 +43,22 @@
     <div style="color:#888;font-size:12px;margin-top:8px"><span class="tr">🌐 İngilizce çeviri yayınlarken otomatik yapılır.</span><span class="en">🌐 The English translation is made automatically when you publish.</span></div>
     <div id="a-msg"></div>
 
+    <div id="popup-only" style="display:none;margin-top:30px;background:#1a1a1a;border:1px dashed #cc0000;border-radius:8px;padding:18px">
+      <h2 style="margin-top:0"><span class="tr">📣 Açılır Pencere (Popup)</span><span class="en">📣 Pop-up Window</span> <span style="color:#888;font-size:12px;font-weight:normal"><span class="tr">(sadece owner)</span><span class="en">(owner only)</span></span></h2>
+      <p style="color:#888;font-size:13px"><span class="tr">Ana sayfaya girenlerde ortada resimli, kısa yazılı bir pencere açılır. X ile kapatılır, "Tekrar gösterme" ile o popup bir daha çıkmaz. Yazı otomatik İngilizceye çevrilir.</span><span class="en">Visitors of the home page get a centred window with a photo and a short text. The X closes it; "Don't show again" hides that popup for good. The text is translated to English automatically.</span></p>
+      <div id="pp-status" class="msg"></div>
+      <div id="pp-drop"></div>
+      <input id="pp-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
+      <input id="pp-text" maxlength="100" data-ph-tr="Kısa yazı (en fazla 100 karakter)" data-ph-en="Short text (max 100 characters)">
+      <div id="pp-count" style="color:#888;font-size:12px;margin:-6px 0 10px">0/100</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn gray" id="pp-preview" type="button"><span class="tr">ÖNİZLE</span><span class="en">PREVIEW</span></button>
+        <button class="btn" id="pp-on" type="button"><span class="tr">POPUP'I YAYINLA</span><span class="en">PUBLISH POPUP</span></button>
+        <button class="btn gray" id="pp-off" type="button"><span class="tr">POPUP'I KAPAT</span><span class="en">TURN POPUP OFF</span></button>
+      </div>
+      <div id="pp-msg"></div>
+    </div>
+
     <h2 style="margin-top:35px"><span class="tr">Yayındaki Duyurular</span><span class="en">Published Announcements</span></h2>
     <div class="wrap-x"><table><thead><tr><th><span class="tr">Tarih</span><span class="en">Date</span></th><th><span class="tr">Başlık</span><span class="en">Title</span></th><th><span class="tr">Yazan</span><span class="en">Posted by</span></th><th></th></tr></thead><tbody id="a-rows"></tbody></table></div>
 
@@ -59,6 +76,11 @@
     </div>
 
     <div id="owner-only" style="display:none">
+      <h2 style="margin-top:40px"><span class="tr">İsim / Yaş Değişiklik Talepleri</span><span class="en">Name / Age Change Requests</span> <span id="rq-count" style="color:#cc0000"></span></h2>
+      <p style="color:#888;font-size:13px"><span class="tr">Yetkililer isim ve yaşlarını bir kez ayarladıktan sonra değiştirmek için senden onay ister. Onayladığında yeni isim ve yaş geçerli olur.</span><span class="en">Once staff have set their name and age, they need your approval to change them. When you approve, the new name and age take effect.</span></p>
+      <div id="rq-msg"></div>
+      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">Mevcut</span><span class="en">Current</span></th><th><span class="tr">İstenen</span><span class="en">Requested</span></th><th></th></tr></thead><tbody id="rq-rows"></tbody></table></div>
+
       <h2 style="margin-top:40px"><span class="tr">🛠 Bakım Modu</span><span class="en">🛠 Maintenance Mode</span></h2>
       <p style="color:#888;font-size:13px"><span class="tr">Açıkken normal ziyaretçiler siteyi göremez, ekranda "BAKIMDAYIZ!" yazar. Yetkililer (editor, admin, owner) siteyi görmeye devam eder. Sadece owner kullanabilir.</span><span class="en">While on, regular visitors cannot see the site and get a "UNDER MAINTENANCE!" screen. Staff (editor, admin, owner) can still see it. Owner only.</span></p>
       <div id="mt-status" class="msg"></div>
@@ -75,6 +97,7 @@
 <script type="module">
 import {makeDrop} from "./upload.js";
 import {translateTrEn} from "./translate.js";
+import {showPopup} from "./popup.js";
 import {db,watchRole,setDoc,onSnapshot,collection,addDoc,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
@@ -88,8 +111,8 @@ const drop=makeDrop($('a-drop'),1000);
 digits($('p-age'));
 
 // Canlı güncelleme: yeni duyuru / yeni hesap / rol değişikliği olunca liste kendiliğinden yenilenir
-let unsubA=null,unsubU=null,unsubP=null,freshA=new Set(),freshU=new Set(),firstA=true,firstU=true;
-function stopLive(){[unsubA,unsubU,unsubP].forEach(f=>f&&f());unsubA=unsubU=unsubP=null;firstA=firstU=true;}
+let unsubA=null,unsubU=null,unsubP=null,unsubR=null,unsubQ=null,freshA=new Set(),freshU=new Set(),firstA=true,firstU=true,myReq=null,reqDocs=[];
+function stopLive(){[unsubA,unsubU,unsubP,unsubR,unsubQ].forEach(f=>f&&f());unsubA=unsubU=unsubP=unsubR=unsubQ=null;firstA=firstU=true;}
 
 watchRole((role,user)=>{
   if(!user){stopLive();show('need-login');return;}
@@ -99,25 +122,80 @@ watchRole((role,user)=>{
   show('panel');startProfile();startAnn();
   if(isAdminRole(role)){$('admin-only').style.display='block';startUsers();}
   $('owner-only').style.display=role==='owner'?'block':'none';
-  if(role==='owner')startMt();
+  $('popup-only').style.display=role==='owner'?'block':'none';
+  if(role==='owner'){startMt();startReq();startPp();}
 });
 
 // ---- Profilim ----
+// İsim/yaş bir kez ayarlandıktan sonra kilitlenir; değiştirmek için owner onayı (talep) gerekir. Owner doğrudan değiştirebilir.
+const locked=()=>myRole!=='owner'&&!!(myProf.name||myProf.age);
 function startProfile(){
   if(unsubP)return;
   unsubP=onSnapshot(doc(db,'users',me.uid),s=>{
     myProf=s.exists()?s.data():{};
     if(document.activeElement!==$('p-name'))$('p-name').value=myProf.name||'';
     if(document.activeElement!==$('p-age'))$('p-age').value=myProf.age??'';
-    renderAnn();
+    renderAnn();renderProfile();
   },e=>console.error(e));
+  unsubR=onSnapshot(doc(db,'nameRequests',me.uid),s=>{myReq=s.exists()?s.data():null;renderProfile();},e=>console.error(e));
+}
+function renderProfile(){
+  const box=$('p-info');box.innerHTML='';
+  const mk=h=>{const d=document.createElement('div');d.className='msg';d.innerHTML=h;box.append(d);return d;};
+  const cur=mk(bi('Mevcut:','Current:')+' <b></b>');cur.querySelector('b').textContent=myProf.name?label(myProf):'—';
+  if(locked())mk('🔒 '+bi('İsim ve yaşın kilitli. Değiştirmek için owner onayı gerekir; yeni değerleri yazıp aşağıdan talep gönderebilirsin.','Your name and age are locked. Changing them needs owner approval; type the new values and send a request below.'));
+  if(myReq&&myReq.status==='pending'){
+    const d=mk('⏳ '+bi('Owner onayı bekleyen talep:','Request waiting for owner approval:')+' <b></b> ');
+    d.querySelector('b').textContent=myReq.name+' • '+myReq.age;
+    const b=document.createElement('button');b.className='btn small gray';b.innerHTML=bi('Talebi iptal et','Cancel request');
+    b.onclick=()=>deleteDoc(doc(db,'nameRequests',me.uid));d.append(b);
+  }
+  if(myReq&&myReq.status==='rejected'){
+    const d=mk('❌ '+bi('Son değişiklik talebin reddedildi.','Your last change request was rejected.')+' ');
+    const b=document.createElement('button');b.className='btn small gray';b.innerHTML=bi('Tamam','OK');
+    b.onclick=()=>deleteDoc(doc(db,'nameRequests',me.uid));d.append(b);
+  }
+  $('p-save').innerHTML=locked()?bi('DEĞİŞİKLİK TALEBİ GÖNDER','SEND CHANGE REQUEST'):bi('KAYDET','SAVE');
+  $('p-save').disabled=locked()&&!!myReq&&myReq.status==='pending';
 }
 $('p-save').onclick=async()=>{
   const n=$('p-name').value.trim(),a=$('p-age').value;
   if(!n||!okAge(a)){note($('p-msg'),T('İsim ve yaş (10-99, sadece sayı) gerekli.','Name and age (10-99, digits only) are required.'),true);return;}
-  try{await updateDoc(doc(db,'users',me.uid),{name:n,age:parseInt(a,10)});note($('p-msg'),T('Profil kaydedildi.','Profile saved.'));}
-  catch(e){note($('p-msg'),T('Kaydedilemedi.','Could not save.'),true);console.error(e);}
+  const age=parseInt(a,10);
+  try{
+    if(locked()){
+      if(n===(myProf.name||'')&&age===myProf.age){note($('p-msg'),T('Değişiklik yok.','No changes.'),true);return;}
+      await setDoc(doc(db,'nameRequests',me.uid),{name:n,age:age,status:'pending',createdAt:serverTimestamp()});
+      note($('p-msg'),T('Talebin owner onayına gönderildi.','Your request was sent for owner approval.'));
+    }else{
+      await updateDoc(doc(db,'users',me.uid),{name:n,age:age});
+      note($('p-msg'),T('Profil kaydedildi.','Profile saved.'));
+    }
+  }catch(e){note($('p-msg'),T('Kaydedilemedi.','Could not save.'),true);console.error(e);}
 };
+
+// ---- İsim/yaş değişiklik talepleri (sadece owner) ----
+function startReq(){
+  if(unsubQ)return;
+  unsubQ=onSnapshot(collection(db,'nameRequests'),snap=>{reqDocs=snap.docs;renderReq();},e=>console.error(e));
+}
+function renderReq(){
+  const tb=$('rq-rows');tb.innerHTML='';
+  const people=new Map(userDocs.map(d=>[d.id,d.data()]));
+  const pend=reqDocs.filter(d=>d.data().status==='pending');
+  $('rq-count').textContent=pend.length?'('+pend.length+')':'';
+  pend.forEach(d=>{const r=d.data(),u=people.get(d.id)||{},tr=document.createElement('tr');
+    cell(tr,u.email||d.id);cell(tr,label(u));cell(tr,r.name+' • '+r.age);
+    const td=document.createElement('td');td.style.whiteSpace='nowrap';
+    const ok=document.createElement('button');ok.className='btn small';ok.innerHTML=bi('Onayla','Approve');
+    ok.onclick=async()=>{try{await updateDoc(doc(db,'users',d.id),{name:r.name,age:r.age});await deleteDoc(doc(db,'nameRequests',d.id));note($('rq-msg'),T('Onaylandı.','Approved.'));}
+      catch(e){note($('rq-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}};
+    const no=document.createElement('button');no.className='btn small gray';no.style.marginLeft='6px';no.innerHTML=bi('Reddet','Reject');
+    no.onclick=async()=>{try{await updateDoc(doc(db,'nameRequests',d.id),{status:'rejected'});note($('rq-msg'),T('Reddedildi.','Rejected.'));}
+      catch(e){note($('rq-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}};
+    td.append(ok,no);tr.append(td);tb.append(tr);});
+  if(!pend.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.style.color='#888';td.innerHTML=bi('Bekleyen talep yok.','No pending requests.');tr.append(td);tb.append(tr);}
+}
 
 // ---- Duyurular ----
 function startAnn(){
@@ -189,7 +267,7 @@ function startUsers(){
   if(unsubU)return;
   unsubU=onSnapshot(collection(db,"users"),snap=>{
     if(!firstU)snap.docChanges().forEach(c=>{if(c.type==='added')freshU.add(c.doc.id);});
-    firstU=false;userDocs=snap.docs;renderUsers();renderAnn();
+    firstU=false;userDocs=snap.docs;renderUsers();renderAnn();renderReq();
   },e=>console.error(e));
 }
 function renderUsers(){
@@ -215,6 +293,10 @@ function renderUsers(){
         const cur={role:sel.value,name:nameIn.value,age:ageIn.value};
         if(cur.role===u.role&&cur.name===(u.name||'')&&cur.age===String(u.age??''))delete pending[d.id];else pending[d.id]=cur;
       };
+      if(myRole!=='owner'&&(u.name||u.age)){ // kilitli: değiştirmek için owner onayı gerekir
+        nameIn.disabled=true;ageIn.disabled=true;
+        nameIn.title=ageIn.title=T('Kilitli: değiştirmek için owner onayı gerekir.','Locked: changing needs owner approval.');
+      }
       [nameIn,ageIn].forEach(x=>x.addEventListener('input',track));sel.addEventListener('change',track);
       tdN.append(nameIn);tdA.append(ageIn);tdR.append(sel);
       const b=document.createElement('button');b.className='btn small';b.innerHTML=bi('Kaydet','Save');
@@ -260,5 +342,52 @@ $('mt-on').onclick=()=>{
   setMt(true);
 };
 $('mt-off').onclick=()=>setMt(false);
-document.addEventListener('langchange',()=>{renderAnn();renderMt();});
+// ---- Açılır pencere / popup (sadece owner) ----
+const ppDrop=makeDrop($('pp-drop'),900);
+let ppState=null,ppStarted=false;
+const ppStatus=s=>note($('pp-msg'),T('Çeviri modeli indiriliyor… ','Downloading translation model… ')+s);
+$('pp-text').addEventListener('input',()=>{$('pp-count').textContent=$('pp-text').value.length+'/100';});
+function renderPp(){
+  const box=$('pp-status');
+  if(ppState&&ppState.on===true){box.innerHTML='🟢 '+bi('Popup yayında:','Popup is live:')+' <b></b>';box.querySelector('b').textContent=ppState.text||'(photo)';}
+  else box.innerHTML='⚪ '+bi('Popup kapalı.','Popup is off.');
+}
+function startPp(){
+  if(ppStarted)return;ppStarted=true;
+  onSnapshot(doc(db,'settings','popup'),s=>{ppState=s.exists()?s.data():null;renderPp();},()=>{});
+}
+function ppValues(){return {t:$('pp-text').value.trim(),img:ppDrop.getData()||$('pp-img').value.trim()};}
+function ppValid(t,img){
+  if(!t&&!img){note($('pp-msg'),T('Kısa bir yazı yaz ya da bir fotoğraf ekle.','Write a short text or add a photo.'),true);return false;}
+  if(img&&!/^(https:\/\/|data:image\/jpeg;base64,).+/.test(img)){note($('pp-msg'),T('Fotoğraf adresi https:// ile başlamalı.','Image URL must start with https://'),true);return false;}
+  return true;
+}
+$('pp-preview').onclick=()=>{const {t,img}=ppValues();if(!ppValid(t,img))return;$('pp-msg').innerHTML='';showPopup({text:t,textEn:t,imageUrl:img,v:0},{preview:true});};
+$('pp-on').onclick=async()=>{
+  const {t,img}=ppValues();if(!ppValid(t,img))return;
+  $('pp-on').disabled=true;
+  let en='';
+  if(t){
+    note($('pp-msg'),T('İngilizceye çevriliyor…','Translating to English…'));
+    try{en=await translateTrEn(t,ppStatus);}
+    catch(e){console.error(e);
+      if(!confirm(T('İngilizce çeviri yapılamadı ['+(e.message||e)+']. Popup sadece Türkçe yayınlansın mı?','English translation failed ['+(e.message||e)+']. Publish the popup in Turkish only?'))){
+        $('pp-on').disabled=false;note($('pp-msg'),T('Yayın iptal edildi.','Publishing cancelled.'),true);return;}}
+  }
+  try{
+    await setDoc(doc(db,'settings','popup'),{on:true,text:t,textEn:en,imageUrl:img,v:Date.now(),updatedAt:serverTimestamp()});
+    ppDrop.clear();$('pp-img').value='';$('pp-text').value='';$('pp-count').textContent='0/100';
+    note($('pp-msg'),T('Popup yayında. Ana sayfaya girenlere açılır.','Popup is live. It opens for visitors of the home page.'));
+  }catch(e){note($('pp-msg'),T('Yetkin yok veya hata oluştu.','No permission or an error occurred.'),true);console.error(e);}
+  $('pp-on').disabled=false;
+};
+$('pp-off').onclick=async()=>{
+  if(!ppState||ppState.on!==true){note($('pp-msg'),T('Popup zaten kapalı.','The popup is already off.'),true);return;}
+  try{
+    await setDoc(doc(db,'settings','popup'),{on:false,text:ppState.text||'',textEn:ppState.textEn||'',imageUrl:ppState.imageUrl||'',v:ppState.v||Date.now(),updatedAt:serverTimestamp()});
+    note($('pp-msg'),T('Popup kapatıldı.','Popup turned off.'));
+  }catch(e){note($('pp-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}
+};
+
+document.addEventListener('langchange',()=>{renderAnn();renderMt();renderProfile();renderReq();renderPp();});
 </script></body></html>

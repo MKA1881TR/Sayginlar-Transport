@@ -22,6 +22,8 @@ service cloud.firestore {
     function optStr(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() <= max); }
     function optOrder(d)       { return !('order' in d) || d.order is number; }
     function okAge(d)          { return !('age' in d) || (d.age is int && d.age >= 10 && d.age <= 99); }
+    // İsim/yaş bir kez ayarlandıktan sonra KİLİTLENİR: değiştirmek için owner gerekir (onaylı talep)
+    function nameLocked(d)     { return 'name' in d || 'age' in d; }
 
     // Duyurular: herkes okur; editor/admin/owner ekler ve siler. authorUid sadece panelde isme çevrilir.
     match /announcements/{id} {
@@ -100,6 +102,19 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow delete: if false;
     }
+    // Popup (ana sayfadaki açılır pencere): herkes okur, SADECE owner değiştirir
+    match /settings/popup {
+      allow read: if true;
+      allow create, update: if isOwner()
+        && request.resource.data.keys().hasOnly(['on', 'text', 'textEn', 'imageUrl', 'v', 'updatedAt'])
+        && request.resource.data.on is bool
+        && request.resource.data.text is string && request.resource.data.text.size() <= 140
+        && request.resource.data.textEn is string && request.resource.data.textEn.size() <= 280
+        && (request.resource.data.imageUrl == '' || validUrl(request.resource.data.imageUrl))
+        && request.resource.data.v is number
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
     // Eski (koda gömülü) kartların veritabanına aktarıldığını gösteren işaretler
     match /settings/{flag} {
       allow read: if true;
@@ -108,6 +123,21 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['done', 'at'])
         && request.resource.data.done == true
         && request.resource.data.at == request.time;
+    }
+
+    // İsim/yaş değişiklik talepleri: yetkili kendi talebini yazar, SADECE owner onaylar/reddeder
+    match /nameRequests/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow create, update: if request.auth.uid == uid && isEditor()
+        && request.resource.data.keys().hasOnly(['name', 'age', 'status', 'createdAt'])
+        && txt(request.resource.data.name, 40)
+        && request.resource.data.age is int && request.resource.data.age >= 10 && request.resource.data.age <= 99
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'rejected';
+      allow delete: if signedIn() && (request.auth.uid == uid || isOwner());
     }
 
     // Kullanıcılar ve roller
@@ -122,6 +152,8 @@ service cloud.firestore {
       allow update: if isAdmin()
                     && resource.data.role != 'owner'
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'name', 'age'])
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['name', 'age'])
+                        || isOwner() || !nameLocked(resource.data))
                     && optTxt(request.resource.data, 'name', 40)
                     && okAge(request.resource.data)
                     && (request.resource.data.role in ['user', 'editor', 'admin']
@@ -129,6 +161,7 @@ service cloud.firestore {
       // Yetkililer (editor/admin/owner) sadece KENDİ isim ve yaşlarını değiştirebilir
       allow update: if request.auth.uid == uid && isEditor()
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'age'])
+                    && (isOwner() || !nameLocked(resource.data))
                     && optTxt(request.resource.data, 'name', 40)
                     && okAge(request.resource.data);
       allow delete: if false;

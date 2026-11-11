@@ -35,7 +35,7 @@
   var here = location.pathname.split('/').pop() || 'index.html';
   var nav = document.createElement('nav');
   nav.className = 'nav';
-  nav.innerHTML = '<a class="brand" href="index.html">Saygınlar Transport</a><ul>' +
+  nav.innerHTML = '<a class="brand" href="./">Saygınlar Transport</a><ul>' +
     links.map(function(l){
       function isHere(h){ return (here||'index').replace('.html','')===h.replace('.html',''); }
       if(l.dd){ // aşağı doğru açılan menü
@@ -43,7 +43,7 @@
         return '<li class="dd"><a class="l'+(act?' active':'')+'" href="#" aria-haspopup="true">'+bi(l.tr,l.en)+' <span class="car">▾</span></a><ul class="ddm">' +
           l.sub.map(function(x){ return '<li><a'+(isHere(x[0])?' class="active"':'')+' href="'+x[0]+'">'+bi(x[1],x[2])+'</a></li>'; }).join('') + '</ul></li>';
       }
-      return '<li><a class="l'+(isHere(l[0])?' active':'')+'" href="'+l[0]+'">'+bi(l[1],l[2])+'</a></li>';
+      return '<li><a class="l'+(isHere(l[0])?' active':'')+'" href="'+(l[0]==='index.html'?'./':l[0])+'">'+bi(l[1],l[2])+'</a></li>';
     }).join('') +
     '<li class="tools"><button class="bell" id="bellbtn" type="button">🔔</button><div class="lang"><span id="bt">TR</span><i></i><span id="be">ENG</span></div>' +
     '<a class="gbtn" id="authbtn" href="giris.html">'+bi('Giriş Yap','Log in')+'</a></li></ul>';
@@ -69,6 +69,10 @@
       '<a href="cerez.html">'+bi('Çerez Politikası','Cookie Policy')+'</a>' +
       '</div><div class="copy">'+bi('&copy; 2026 Saygınlar Transport. Tüm Hakları Saklıdır.','&copy; 2026 Saygınlar Transport. All Rights Reserved.')+'</div>';
     document.body.appendChild(ft);
+    // Ana sayfada owner'ın açtığı popup (resimli kısa duyuru penceresi)
+    if(here==='index.html' || here==='index'){
+      import('./popup.js').then(function(m){ m.startPopup(); }).catch(function(){});
+    }
     // Ana sayfada herkese açık Discord butonu
     var jb = document.getElementById('join');
     if(jb){
@@ -147,7 +151,7 @@
         var b = document.getElementById('authbtn');
         if(u){
           b.innerHTML = bi('Çıkış Yap','Log out'); b.href = '#';
-          b.onclick = function(e){ e.preventDefault(); m.signOut(m.auth).then(function(){ location.href='index.html'; }); };
+          b.onclick = function(e){ e.preventDefault(); m.signOut(m.auth).then(function(){ location.href='./'; }); };
         }
       });
       m.onSnapshot(m.doc(m.db,'settings','maintenance'), function(s){
