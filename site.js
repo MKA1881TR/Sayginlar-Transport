@@ -82,6 +82,56 @@
       db.innerHTML = '<i class="fa-brands fa-discord"></i> ' + bi("DISCORD'A KATIL",'JOIN OUR DISCORD');
       jb.parentNode.insertBefore(db, jb.nextSibling);
     }
+
+    // ---- İletişim bilgileri: owner değiştirince tüm sitedeki linkler güncellenir ----
+    var CDEF = { instagram:'https://www.instagram.com/sayginlartransport59/', youtube:'https://www.youtube.com/@SAYGINLARTRANSPORT',
+                 website:'https://sayginlar-transport.vercel.app/', discord:'https://discord.gg/CbAbzJt6Pu', email:'sayginlartransport59@gmail.com', tmp:'' };
+    function normU(u){ return String(u||'').toLowerCase().replace(/\/+$/,''); }
+    function cdisp(k,v){
+      if(k==='instagram'){ var m1 = v.match(/instagram\.com\/([^\/?#]+)/i); return m1 ? '@'+m1[1] : v; }
+      if(k==='youtube'){ var m2 = v.match(/youtube\.com\/(@[^\/?#]+)/i); return m2 ? m2[1] : v; }
+      return v;
+    }
+    var cAnchors = [];
+    [].forEach.call(document.querySelectorAll('a[href]'), function(a){
+      var h = a.getAttribute('href'), key = null;
+      if(/^mailto:/i.test(h)){ if(h.toLowerCase()==='mailto:'+CDEF.email) key = 'email'; }
+      else ['instagram','youtube','website','discord'].forEach(function(k){ if(normU(h)===normU(CDEF[k])) key = k; });
+      if(!key) return;
+      a.dataset.ckey = key;
+      if(a.textContent.trim()===cdisp(key,CDEF[key])) a.dataset.cauto = '1';   // yazısı linkin kendisiyse yazı da güncellenir
+      cAnchors.push(a);
+    });
+    var contactNow = {};
+    try{ contactNow = JSON.parse(localStorage.getItem('contact')||'{}') || {}; }catch(e){}
+    function applyContact(){
+      var okU = function(u){ return /^https:\/\/\S+$/i.test(u||''); };
+      var okE = function(e){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e||''); };
+      cAnchors.forEach(function(a){
+        var k = a.dataset.ckey, v = contactNow[k];
+        if(k==='email' ? !okE(v) : !okU(v)) v = CDEF[k];
+        a.href = k==='email' ? 'mailto:'+v : v;
+        if(a.dataset.cauto) a.textContent = cdisp(k,v);
+      });
+      var mok = document.getElementById('mok');            // ana sayfadaki "Onaylıyorum" -> TruckersMP
+      if(mok && okU(contactNow.tmp)) mok.href = contactNow.tmp;
+    }
+    applyContact();
+
+    // En sağ altta sadece owner'ın gördüğü küçük yuvarlak düzenleme butonu
+    var obtn = null;
+    function ownerBtn(on){
+      if(on && !obtn){
+        obtn = document.createElement('button'); obtn.type = 'button'; obtn.className = 'ownbtn';
+        obtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+        obtn.title = T('İletişim bilgilerini düzenle (owner)','Edit contact info (owner)');
+        obtn.onclick = function(){
+          import('./contact-edit.js').then(function(m){ m.openContactEditor(contactNow, CDEF); }).catch(function(e){ console.error(e); });
+        };
+        document.body.appendChild(obtn); document.documentElement.classList.add('has-ownbtn');
+      } else if(!on && obtn){ obtn.remove(); obtn = null; document.documentElement.classList.remove('has-ownbtn'); }
+    }
+    document.addEventListener('langchange', function(){ if(obtn) obtn.title = T('İletişim bilgilerini düzenle (owner)','Edit contact info (owner)'); });
     function set(l){
       localStorage.setItem('lang', l);
       document.documentElement.dataset.lang = l;
@@ -160,8 +210,14 @@
         try{ localStorage.setItem('mt', JSON.stringify(mt)); }catch(e){}
         mtPaint();
       }, function(){});
+      m.onSnapshot(m.doc(m.db,'settings','contact'), function(s){
+        contactNow = s.exists() ? s.data() : {};
+        try{ localStorage.setItem('contact', JSON.stringify(contactNow)); }catch(e){}
+        applyContact();
+      }, function(){});
       m.watchRole(function(r){
         isStaff = m.isStaffRole(r);
+        ownerBtn(r === 'owner');
         try{ localStorage.setItem('mtstaff', isStaff ? '1' : '0'); }catch(e){}
         mtPaint();
       });

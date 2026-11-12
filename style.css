@@ -153,3 +153,8 @@ tr.fresh td{animation:flash 4s ease-out}
 .ptxt{color:#fff;font-size:16px;line-height:1.45;flex:1;min-width:180px}
 .pclose{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:22px;line-height:1;cursor:pointer;z-index:2}
 .pclose:hover{background:#cc0000}
+
+/* --- owner iletişim düzenleme butonu --- */
+.ownbtn{position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;background:#cc0000;color:#fff;border:2px solid #fff;font-size:16px;cursor:pointer;z-index:960;box-shadow:0 4px 15px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.ownbtn:hover{background:#e00000}
+html.has-ownbtn .wd{bottom:76px}
