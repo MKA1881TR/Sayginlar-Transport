@@ -13,7 +13,7 @@
   </div>
 
   <div id="no-access" style="display:none;text-align:center">
-    <div class="msg err"><span class="tr">Bu hesabın panele erişim yetkisi yok. Eğer yetkiliyseniz lütfen discord üzerinden Web Desinger'a ulaşınız.</span><span class="en">If you are authorized, please contact the Web Designer via Discord.</span></div>
+    <div class="msg err"><span class="tr">Bu hesabın panele erişim yetkisi yok. Eğer yetkiliyseniz lütfen discord üzerinden Web Desinger'a ulaşınız.</span><span class="en">This account has no access to the panel. If you are authorized, please contact the Web Designer via Discord.</span></div>
     <p id="who2" style="color:#888"></p>
   </div>
 
@@ -71,11 +71,17 @@
         <b>owner</b>: <span class="tr">en üst, kimse değiştiremez</span><span class="en">top level, nobody can change it</span>
       </p>
       <p style="color:#ff6666;font-size:13px"><span class="tr">Editor veya admin yaparken kişinin ismi ve yaşı zorunludur (yaş sadece sayı, 10-99).</span><span class="en">Name and age are required when setting editor or admin (age: digits only, 10-99).</span></p>
+      <p style="color:#888;font-size:13px"><span class="tr">🔐 Bir admin birini editor/admin yapmak istediğinde <b>owner onayı</b> gerekir (talep owner'a gider). Owner bir admini <b>Güvenilir</b> işaretlerse o admin onaysız yetki verebilir. Kullanıcıya düşürme (user) onay gerektirmez.</span><span class="en">🔐 When an admin wants to make someone editor/admin, <b>owner approval</b> is required (the request goes to the owner). If the owner marks an admin as <b>Trusted</b>, that admin can grant roles without approval. Demoting to user needs no approval.</span></p>
       <div id="u-msg"></div>
-      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">İsim</span><span class="en">Name</span></th><th><span class="tr">Yaş</span><span class="en">Age</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
+      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">İsim</span><span class="en">Name</span></th><th><span class="tr">Yaş</span><span class="en">Age</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th><span class="tr">Güvenilir</span><span class="en">Trusted</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
     </div>
 
     <div id="owner-only" style="display:none">
+      <h2 style="margin-top:40px"><span class="tr">Rol Talepleri</span><span class="en">Role Requests</span> <span id="lr-count" style="color:#cc0000"></span></h2>
+      <p style="color:#888;font-size:13px"><span class="tr">Güvenilir olmayan adminlerin birini editor/admin yapma talepleri burada bekler. Onayladığında rol verilir.</span><span class="en">Requests from non-trusted admins to make someone editor/admin wait here. When you approve, the role is granted.</span></p>
+      <div id="lr-msg"></div>
+      <div class="wrap-x"><table><thead><tr><th><span class="tr">Kişi</span><span class="en">Person</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th><span class="tr">İsteyen admin</span><span class="en">Requested by</span></th><th><span class="tr">İsim • Yaş</span><span class="en">Name • Age</span></th><th></th></tr></thead><tbody id="lr-rows"></tbody></table></div>
+
       <h2 style="margin-top:40px"><span class="tr">İsim / Yaş Değişiklik Talepleri</span><span class="en">Name / Age Change Requests</span> <span id="rq-count" style="color:#cc0000"></span></h2>
       <p style="color:#888;font-size:13px"><span class="tr">Yetkililer isim ve yaşlarını bir kez ayarladıktan sonra değiştirmek için senden onay ister. Onayladığında yeni isim ve yaş geçerli olur.</span><span class="en">Once staff have set their name and age, they need your approval to change them. When you approve, the new name and age take effect.</span></p>
       <div id="rq-msg"></div>
@@ -98,7 +104,7 @@
 import {makeDrop} from "./upload.js";
 import {translateTrEn} from "./translate.js";
 import {showPopup} from "./popup.js";
-import {db,watchRole,setDoc,onSnapshot,collection,addDoc,deleteDoc,updateDoc,doc,query,orderBy,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
+import {db,watchRole,setDoc,onSnapshot,collection,addDoc,deleteDoc,updateDoc,doc,query,orderBy,where,serverTimestamp,isAdminRole,isStaffRole} from "./fb.js";
 const $=id=>document.getElementById(id);
 const show=id=>{['need-login','no-access','panel'].forEach(x=>$(x).style.display=x===id?'block':'none');};
 const cell=(tr,text)=>{const td=document.createElement('td');td.textContent=text??'';tr.append(td);return td;};
@@ -111,8 +117,9 @@ const drop=makeDrop($('a-drop'),1000);
 digits($('p-age'));
 
 // Canlı güncelleme: yeni duyuru / yeni hesap / rol değişikliği olunca liste kendiliğinden yenilenir
+let unsubL=null,unsubM=null,myRoleReqs=new Map(),roleReqDocs=[];
 let unsubA=null,unsubU=null,unsubP=null,unsubR=null,unsubQ=null,freshA=new Set(),freshU=new Set(),firstA=true,firstU=true,myReq=null,reqDocs=[];
-function stopLive(){[unsubA,unsubU,unsubP,unsubR,unsubQ].forEach(f=>f&&f());unsubA=unsubU=unsubP=unsubR=unsubQ=null;firstA=firstU=true;}
+function stopLive(){[unsubA,unsubU,unsubP,unsubR,unsubQ,unsubL,unsubM].forEach(f=>f&&f());unsubA=unsubU=unsubP=unsubR=unsubQ=unsubL=unsubM=null;firstA=firstU=true;}
 
 watchRole((role,user)=>{
   if(!user){stopLive();show('need-login');return;}
@@ -120,10 +127,10 @@ watchRole((role,user)=>{
   if(!isStaffRole(role)){stopLive();$('who2').textContent=user.email;show('no-access');return;}
   $('who').textContent=user.email+' ('+role+')';
   show('panel');startProfile();startAnn();
-  if(isAdminRole(role)){$('admin-only').style.display='block';startUsers();}
+  if(isAdminRole(role)){$('admin-only').style.display='block';startUsers();if(role!=='owner')startMyRoleReqs();}
   $('owner-only').style.display=role==='owner'?'block':'none';
   $('popup-only').style.display=role==='owner'?'block':'none';
-  if(role==='owner'){startMt();startReq();startPp();}
+  if(role==='owner'){startMt();startReq();startPp();startRoleReq();}
 });
 
 // ---- Profilim ----
@@ -267,16 +274,34 @@ function startUsers(){
   if(unsubU)return;
   unsubU=onSnapshot(collection(db,"users"),snap=>{
     if(!firstU)snap.docChanges().forEach(c=>{if(c.type==='added')freshU.add(c.doc.id);});
-    firstU=false;userDocs=snap.docs;renderUsers();renderAnn();renderReq();
+    firstU=false;userDocs=snap.docs;renderUsers();renderAnn();renderReq();renderRoleReq();
+  },e=>console.error(e));
+}
+function startMyRoleReqs(){ // güvenilir olmayan admin: kendi gönderdiği talepleri görür
+  if(unsubM)return;
+  unsubM=onSnapshot(query(collection(db,'roleRequests'),where('requestedBy','==',me.uid)),snap=>{
+    myRoleReqs=new Map(snap.docs.map(d=>[d.id,d.data()]));renderUsers();
   },e=>console.error(e));
 }
 function renderUsers(){
   const tb=$('u-rows');tb.innerHTML='';
+  const trustedMe=myRole==='owner'||!!myProf.trusted;
   const docs=userDocs.slice().sort((x,y)=>String(x.data().email||'').localeCompare(String(y.data().email||'')));
   docs.forEach(d=>{const u=d.data(),tr=document.createElement('tr');
     if(freshU.has(d.id))tr.className='fresh';
     cell(tr,u.email);
-    const tdN=document.createElement('td'),tdA=document.createElement('td'),tdR=document.createElement('td'),tdS=document.createElement('td');
+    const tdN=document.createElement('td'),tdA=document.createElement('td'),tdR=document.createElement('td'),tdT=document.createElement('td'),tdS=document.createElement('td');
+    if(u.role==='admin'){ // güvenilir admin işareti (sadece owner değiştirir)
+      if(myRole==='owner'&&d.id!==me.uid){
+        const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!u.trusted;cb.style.cssText='width:auto;margin:0;cursor:pointer';
+        cb.title=T('Açıksa bu admin birini editor/admin yaparken owner onayı gerekmez.','If on, this admin does not need owner approval to make someone editor/admin.');
+        cb.onchange=async()=>{
+          try{await updateDoc(doc(db,"users",d.id),{trusted:cb.checked});note($('u-msg'),T('Kaydedildi.','Saved.'));}
+          catch(e){cb.checked=!cb.checked;note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
+        };
+        tdT.append(cb);
+      }else tdT.textContent=u.trusted?'✔':'—';
+    }
     if(u.role==='owner'||d.id===me.uid){
       tdN.textContent=u.name||'—';tdA.textContent=u.age??'—';
       if(u.role==='owner')tdR.innerHTML='<b>owner</b> <span class="lock">🔒</span>';
@@ -304,14 +329,65 @@ function renderUsers(){
         const role=sel.value,n=nameIn.value.trim(),a=ageIn.value;
         const need=role!=='user';
         if((need&&(!n||!okAge(a)))||(a&&!okAge(a))){note($('u-msg'),T('Editor/admin için isim ve yaş (10-99, sadece sayı) gerekli.','Name and age (10-99, digits only) are required for editor/admin.'),true);return;}
-        const data={role};if(n)data.name=n;if(a)data.age=parseInt(a,10);
-        try{await updateDoc(doc(db,"users",d.id),data);delete pending[d.id];note($('u-msg'),T('Kaydedildi.','Saved.'));}
-        catch(e){note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
+        const promote=(role==='editor'||role==='admin')&&role!==u.role;
+        try{
+          if(promote&&!trustedMe){ // owner onayı gerekir: talep gönder
+            const rd={role,requestedBy:me.uid,status:'pending',createdAt:serverTimestamp()};
+            if(n)rd.name=n;if(a)rd.age=parseInt(a,10);
+            await setDoc(doc(db,'roleRequests',d.id),rd);
+            delete pending[d.id];
+            note($('u-msg'),T('Talep owner onayına gönderildi.','Request sent for owner approval.'));
+          }else{
+            const data={role};if(n)data.name=n;if(a)data.age=parseInt(a,10);
+            if(myRole==='owner'&&role!=='admin'&&u.trusted)data.trusted=false; // admin olmaktan çıkan kişide güvenilir işareti kalkar
+            await updateDoc(doc(db,"users",d.id),data);delete pending[d.id];
+            note($('u-msg'),T('Kaydedildi.','Saved.'));
+          }
+        }catch(e){note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
       };
-      tdS.append(b);
+      const rq=myRoleReqs.get(d.id);
+      if(rq&&rq.status==='pending'){
+        const w=document.createElement('span');w.style.fontSize='12px';w.innerHTML='⏳ '+bi('Owner onayı bekliyor → ','Waiting for owner approval → ')+'<b></b> ';w.querySelector('b').textContent=rq.role;
+        const c=document.createElement('button');c.className='btn small gray';c.innerHTML=bi('İptal','Cancel');c.onclick=()=>deleteDoc(doc(db,'roleRequests',d.id));
+        tdS.append(w,c);
+      }else if(rq&&rq.status==='rejected'){
+        const w=document.createElement('span');w.style.fontSize='12px';w.innerHTML='❌ '+bi('Talep reddedildi ','Request rejected ');
+        const c=document.createElement('button');c.className='btn small gray';c.innerHTML=bi('Tamam','OK');c.onclick=()=>deleteDoc(doc(db,'roleRequests',d.id));
+        tdS.append(w,c,b);
+      }else tdS.append(b);
     }
-    tr.append(tdN,tdA,tdR,tdS);tb.append(tr);});
+    tr.append(tdN,tdA,tdR,tdT,tdS);tb.append(tr);});
   freshU.clear();
+}
+
+// ---- Rol talepleri (sadece owner) ----
+function startRoleReq(){
+  if(unsubL)return;
+  unsubL=onSnapshot(collection(db,'roleRequests'),snap=>{roleReqDocs=snap.docs;renderRoleReq();},e=>console.error(e));
+}
+function renderRoleReq(){
+  const tb=$('lr-rows');tb.innerHTML='';
+  const people=new Map(userDocs.map(d=>[d.id,d.data()]));
+  const pend=roleReqDocs.filter(d=>d.data().status==='pending');
+  $('lr-count').textContent=pend.length?'('+pend.length+')':'';
+  pend.forEach(d=>{const r=d.data(),t=people.get(d.id)||{},by=people.get(r.requestedBy)||{},tr=document.createElement('tr');
+    cell(tr,t.email||d.id);cell(tr,(t.role||'user')+' → '+r.role);cell(tr,by.email||r.requestedBy);
+    cell(tr,r.name?(r.name+(r.age?' • '+r.age:'')):label(t));
+    const td=document.createElement('td');td.style.whiteSpace='nowrap';
+    const ok=document.createElement('button');ok.className='btn small';ok.innerHTML=bi('Onayla','Approve');
+    ok.onclick=async()=>{
+      try{const data={role:r.role};if(r.name)data.name=r.name;if(r.age)data.age=r.age;
+        await updateDoc(doc(db,'users',d.id),data);await deleteDoc(doc(db,'roleRequests',d.id));
+        note($('lr-msg'),T('Onaylandı, rol verildi.','Approved, role granted.'));}
+      catch(e){note($('lr-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}
+    };
+    const no=document.createElement('button');no.className='btn small gray';no.style.marginLeft='6px';no.innerHTML=bi('Reddet','Reject');
+    no.onclick=async()=>{
+      try{await updateDoc(doc(db,'roleRequests',d.id),{status:'rejected'});note($('lr-msg'),T('Reddedildi.','Rejected.'));}
+      catch(e){note($('lr-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}
+    };
+    td.append(ok,no);tr.append(td);tb.append(tr);});
+  if(!pend.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.style.color='#888';td.innerHTML=bi('Bekleyen talep yok.','No pending requests.');tr.append(td);tb.append(tr);}
 }
 
 // ---- Bakım modu (sadece owner) ----
