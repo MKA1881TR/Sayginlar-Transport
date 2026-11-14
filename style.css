@@ -42,7 +42,7 @@ th,td{padding:10px;border:1px solid #444;text-align:left;font-size:14px;vertical
 .pcard span{color:#000;font-weight:900;text-transform:uppercase;letter-spacing:1px}
 .ann{background:#1a1a1a;border:1px solid #333;border-left:4px solid #cc0000;border-radius:6px;padding:20px;margin-bottom:18px}
 .ann h3{margin:0 0 6px;color:#fff}.ann small{color:#888}.ann p{white-space:pre-wrap;line-height:1.7;color:#e0e0e0}
-:root{--hero:url('https://drive.google.com/file/d/1VdTZTGC1wQkt6SI0CewHEcE_-SrkCZTR/view?usp=sharing direkt')} /* ana sayfa + bakım ekranı arka plan fotoğrafı (tek yerden değişir) */
+:root{--hero:url('https://i.postimg.cc/KYkPq9NX/ets2-20260228-204845-00.png')} /* ana sayfa + bakım ekranı arka plan fotoğrafı (tek yerden değişir) */
 .hero{min-height:calc(100vh - 190px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),var(--hero) center/cover}
 .hero h1{font-size:44px;margin:0 0 12px}
 .policy h2{font-size:18px;color:#cc0000;text-transform:uppercase;margin-top:30px;border-left:3px solid #cc0000;padding-left:10px}
