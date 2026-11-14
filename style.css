@@ -158,15 +158,3 @@ tr.fresh td{animation:flash 4s ease-out}
 .ownbtn{position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;background:#cc0000;color:#fff;border:2px solid #fff;font-size:16px;cursor:pointer;z-index:960;box-shadow:0 4px 15px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
 .ownbtn:hover{background:#e00000}
 html.has-ownbtn .wd{bottom:76px}
-
-/* --- yönetim paneli: sekmeler ve bölümler --- */
-.tabs-bar{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid #333;margin:10px 0 22px}
-.tabbtn{background:#1a1a1a;border:1px solid #333;border-bottom:none;color:#aaa;padding:10px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit}
-.tabbtn:hover{color:#fff;background:#222}
-.tabbtn.on{background:#cc0000;border-color:#cc0000;color:#fff}
-.tabbadge{background:#fff;color:#cc0000;border-radius:10px;padding:0 7px;font-size:12px;margin-left:6px;font-weight:bold}
-.tabbadge:empty{display:none}
-.tabpane{display:none}
-.sec{background:#1a1a1a;border:1px solid #2c2c2c;border-radius:10px;padding:18px;margin-bottom:20px}
-.sec h2{margin:0 0 10px;font-size:20px}
-.sec summary{cursor:pointer;font-weight:bold;font-size:17px;color:#fff}
