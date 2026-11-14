@@ -13,91 +13,125 @@
   </div>
 
   <div id="no-access" style="display:none;text-align:center">
-    <div class="msg err"><span class="tr">Bu hesabın panele erişim yetkisi yok. Eğer yetkiliyseniz lütfen discord üzerinden Web Desinger'a ulaşınız.</span><span class="en">This account has no access to the panel. If you are authorized, please contact the Web Designer via Discord.</span></div>
+    <div class="msg err"><span class="tr">Bu hesabın panele erişim yetkisi yok. Bir yöneticiden yetki iste.</span><span class="en">This account has no access to the panel. Ask an admin for permission.</span></div>
     <p id="who2" style="color:#888"></p>
   </div>
 
   <div id="panel" style="display:none">
-    <p style="color:#888"><span class="tr">Giriş yapan:</span><span class="en">Signed in as:</span> <b id="who"></b></p>
+    <p style="color:#888;margin-top:0"><span class="tr">Giriş yapan:</span><span class="en">Signed in as:</span> <b id="who"></b></p>
 
-    <h2><span class="tr">Profilim</span><span class="en">My Profile</span></h2>
-    <p style="color:#888;font-size:13px"><span class="tr">Duyuru atarken panelde adın bu şekilde görünür (isim • yaş). Ziyaretçiler görmez.</span><span class="en">When you post an announcement, your name appears like this in the panel (name • age). Visitors cannot see it.</span></p>
-    <div id="p-info"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
-      <input id="p-name" maxlength="40" style="flex:2;min-width:160px" data-ph-tr="İsim" data-ph-en="Name">
-      <input id="p-age" maxlength="2" inputmode="numeric" style="flex:1;min-width:90px;max-width:120px" data-ph-tr="Yaş" data-ph-en="Age">
-      <button class="btn" id="p-save" style="margin-top:6px"><span class="tr">KAYDET</span><span class="en">SAVE</span></button>
+    <div class="tabs-bar">
+      <button type="button" class="tabbtn" data-tab="ann">📢 <span class="tr">Duyurular</span><span class="en">Announcements</span></button>
+      <button type="button" class="tabbtn" data-tab="roles" id="tb-roles" style="display:none">👥 <span class="tr">Yetkiler</span><span class="en">Roles</span></button>
+      <button type="button" class="tabbtn" data-tab="appr" id="tb-appr" style="display:none">✅ <span class="tr">Onaylar</span><span class="en">Approvals</span><span class="tabbadge" id="appr-badge"></span></button>
+      <button type="button" class="tabbtn" data-tab="site" id="tb-site" style="display:none">⚙️ <span class="tr">Site Ayarları</span><span class="en">Site Settings</span></button>
+      <button type="button" class="tabbtn" data-tab="me">👤 <span class="tr">Profilim</span><span class="en">My Profile</span></button>
     </div>
-    <div id="p-msg"></div>
 
-    <p style="color:#888;font-size:13px"><span class="tr">İpucu: Admin/owner olarak giriş yapınca Management, Gallery ve Partnership sayfalarında "Yeni Ekle" kutusu görünür; kartların üzerine gelince düzenle/sil işaretleri çıkar.</span><span class="en">Tip: when logged in as admin/owner, an "Add" box appears on the Management, Gallery and Partnership pages; hover over cards to see edit/delete icons.</span></p>
-
-    <h2><span class="tr">Yeni Duyuru</span><span class="en">New Announcement</span></h2>
+    <!-- ========== DUYURULAR ========== -->
+    <section class="tabpane" id="pane-ann">
+      <div class="sec">
+        <h2><span class="tr">Yeni Duyuru</span><span class="en">New Announcement</span></h2>
         <input id="a-title" maxlength="120" data-ph-tr="Başlık" data-ph-en="Title">
-    <textarea id="a-body" maxlength="3000" data-ph-tr="İçerik" data-ph-en="Content"></textarea>
-    
-    <div id="a-drop"></div>
-    <input id="a-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
-    <label style="display:flex;gap:8px;align-items:center;color:#ccc;font-size:14px;margin:4px 0 12px;cursor:pointer"><input type="checkbox" id="a-push" checked style="width:auto;margin:0"><span class="tr">🔔 Bildirimleri açmış ziyaretçilere bildirim de gönder</span><span class="en">🔔 Also send a notification to visitors who turned them on</span></label>
-    <button class="btn" id="a-add"><span class="tr">DUYURU YAYINLA</span><span class="en">PUBLISH</span></button>
-    <div style="color:#888;font-size:12px;margin-top:8px"><span class="tr">🌐 İngilizce çeviri yayınlarken otomatik yapılır.</span><span class="en">🌐 The English translation is made automatically when you publish.</span></div>
-    <div id="a-msg"></div>
-
-    <div id="popup-only" style="display:none;margin-top:30px;background:#1a1a1a;border:1px dashed #cc0000;border-radius:8px;padding:18px">
-      <h2 style="margin-top:0"><span class="tr">📣 Açılır Pencere (Popup)</span><span class="en">📣 Pop-up Window</span> <span style="color:#888;font-size:12px;font-weight:normal"><span class="tr">(sadece owner)</span><span class="en">(owner only)</span></span></h2>
-      <p style="color:#888;font-size:13px"><span class="tr">Ana sayfaya girenlerde ortada resimli, kısa yazılı bir pencere açılır. X ile kapatılır, "Tekrar gösterme" ile o popup bir daha çıkmaz. Yazı otomatik İngilizceye çevrilir.</span><span class="en">Visitors of the home page get a centred window with a photo and a short text. The X closes it; "Don't show again" hides that popup for good. The text is translated to English automatically.</span></p>
-      <div id="pp-status" class="msg"></div>
-      <div id="pp-drop"></div>
-      <input id="pp-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
-      <input id="pp-text" maxlength="100" data-ph-tr="Kısa yazı (en fazla 100 karakter)" data-ph-en="Short text (max 100 characters)">
-      <div id="pp-count" style="color:#888;font-size:12px;margin:-6px 0 10px">0/100</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn gray" id="pp-preview" type="button"><span class="tr">ÖNİZLE</span><span class="en">PREVIEW</span></button>
-        <button class="btn" id="pp-on" type="button"><span class="tr">POPUP'I YAYINLA</span><span class="en">PUBLISH POPUP</span></button>
-        <button class="btn gray" id="pp-off" type="button"><span class="tr">POPUP'I KAPAT</span><span class="en">TURN POPUP OFF</span></button>
+        <textarea id="a-body" maxlength="3000" data-ph-tr="İçerik" data-ph-en="Content"></textarea>
+        <div id="a-drop"></div>
+        <input id="a-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
+        <label style="display:flex;gap:8px;align-items:center;color:#ccc;font-size:14px;margin:4px 0 12px;cursor:pointer"><input type="checkbox" id="a-push" checked style="width:auto;margin:0"><span class="tr">🔔 Bildirimleri açmış ziyaretçilere bildirim de gönder</span><span class="en">🔔 Also send a notification to visitors who turned them on</span></label>
+        <button class="btn" id="a-add"><span class="tr">DUYURU YAYINLA</span><span class="en">PUBLISH</span></button>
+        <div style="color:#888;font-size:12px;margin-top:8px"><span class="tr">🌐 İngilizce çeviri yayınlarken otomatik yapılır.</span><span class="en">🌐 The English translation is made automatically when you publish.</span></div>
+        <div id="a-msg"></div>
       </div>
-      <div id="pp-msg"></div>
-    </div>
 
-    <h2 style="margin-top:35px"><span class="tr">Yayındaki Duyurular</span><span class="en">Published Announcements</span></h2>
-    <div class="wrap-x"><table><thead><tr><th><span class="tr">Tarih</span><span class="en">Date</span></th><th><span class="tr">Başlık</span><span class="en">Title</span></th><th><span class="tr">Yazan</span><span class="en">Posted by</span></th><th></th></tr></thead><tbody id="a-rows"></tbody></table></div>
+      <details class="sec" id="popup-only" style="display:none">
+        <summary><span class="tr">📣 Açılır Pencere (Popup)</span><span class="en">📣 Pop-up Window</span> <span style="color:#888;font-size:12px;font-weight:normal"><span class="tr">(sadece owner)</span><span class="en">(owner only)</span></span></summary>
+        <p style="color:#888;font-size:13px"><span class="tr">Ana sayfaya girenlerde ortada resimli, kısa yazılı bir pencere açılır. X ile kapatılır, "Tekrar gösterme" ile o popup bir daha çıkmaz. Yazı otomatik İngilizceye çevrilir.</span><span class="en">Visitors of the home page get a centred window with a photo and a short text. The X closes it; "Don't show again" hides that popup for good. The text is translated to English automatically.</span></p>
+        <div id="pp-status" class="msg"></div>
+        <div id="pp-drop"></div>
+        <input id="pp-img" data-ph-tr="ya da fotoğraf URL'si (isteğe bağlı, https://...)" data-ph-en="or image URL (optional, https://...)">
+        <input id="pp-text" maxlength="100" data-ph-tr="Kısa yazı (en fazla 100 karakter)" data-ph-en="Short text (max 100 characters)">
+        <div id="pp-count" style="color:#888;font-size:12px;margin:-6px 0 10px">0/100</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn gray" id="pp-preview" type="button"><span class="tr">ÖNİZLE</span><span class="en">PREVIEW</span></button>
+          <button class="btn" id="pp-on" type="button"><span class="tr">POPUP'I YAYINLA</span><span class="en">PUBLISH POPUP</span></button>
+          <button class="btn gray" id="pp-off" type="button"><span class="tr">POPUP'I KAPAT</span><span class="en">TURN POPUP OFF</span></button>
+        </div>
+        <div id="pp-msg"></div>
+      </details>
 
-    <div id="admin-only" style="display:none">
-      <h2 style="margin-top:40px"><span class="tr">Hesap Yetkileri</span><span class="en">Account Roles</span></h2>
-      <p style="color:#888;font-size:13px">
-        <b>user</b>: <span class="tr">yetkisiz</span><span class="en">no access</span> &nbsp;•&nbsp;
-        <b>editor</b>: <span class="tr">sadece duyuru</span><span class="en">announcements only</span> &nbsp;•&nbsp;
-        <b>admin</b>: <span class="tr">duyuru + site içeriği + yetki verme</span><span class="en">announcements + site content + roles</span> &nbsp;•&nbsp;
-        <b>owner</b>: <span class="tr">en üst, kimse değiştiremez</span><span class="en">top level, nobody can change it</span>
-      </p>
-      <p style="color:#ff6666;font-size:13px"><span class="tr">Editor veya admin yaparken kişinin ismi ve yaşı zorunludur (yaş sadece sayı, 10-99).</span><span class="en">Name and age are required when setting editor or admin (age: digits only, 10-99).</span></p>
-      <p style="color:#888;font-size:13px"><span class="tr">🔐 Bir admin birini editor/admin yapmak istediğinde <b>owner onayı</b> gerekir (talep owner'a gider). Owner bir admini <b>Güvenilir</b> işaretlerse o admin onaysız yetki verebilir. Kullanıcıya düşürme (user) onay gerektirmez.</span><span class="en">🔐 When an admin wants to make someone editor/admin, <b>owner approval</b> is required (the request goes to the owner). If the owner marks an admin as <b>Trusted</b>, that admin can grant roles without approval. Demoting to user needs no approval.</span></p>
-      <div id="u-msg"></div>
-      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">İsim</span><span class="en">Name</span></th><th><span class="tr">Yaş</span><span class="en">Age</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th><span class="tr">Güvenilir</span><span class="en">Trusted</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
-    </div>
-
-    <div id="owner-only" style="display:none">
-      <h2 style="margin-top:40px"><span class="tr">Rol Talepleri</span><span class="en">Role Requests</span> <span id="lr-count" style="color:#cc0000"></span></h2>
-      <p style="color:#888;font-size:13px"><span class="tr">Güvenilir olmayan adminlerin birini editor/admin yapma talepleri burada bekler. Onayladığında rol verilir.</span><span class="en">Requests from non-trusted admins to make someone editor/admin wait here. When you approve, the role is granted.</span></p>
-      <div id="lr-msg"></div>
-      <div class="wrap-x"><table><thead><tr><th><span class="tr">Kişi</span><span class="en">Person</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th><span class="tr">İsteyen admin</span><span class="en">Requested by</span></th><th><span class="tr">İsim • Yaş</span><span class="en">Name • Age</span></th><th></th></tr></thead><tbody id="lr-rows"></tbody></table></div>
-
-      <h2 style="margin-top:40px"><span class="tr">İsim / Yaş Değişiklik Talepleri</span><span class="en">Name / Age Change Requests</span> <span id="rq-count" style="color:#cc0000"></span></h2>
-      <p style="color:#888;font-size:13px"><span class="tr">Yetkililer isim ve yaşlarını bir kez ayarladıktan sonra değiştirmek için senden onay ister. Onayladığında yeni isim ve yaş geçerli olur.</span><span class="en">Once staff have set their name and age, they need your approval to change them. When you approve, the new name and age take effect.</span></p>
-      <div id="rq-msg"></div>
-      <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">Mevcut</span><span class="en">Current</span></th><th><span class="tr">İstenen</span><span class="en">Requested</span></th><th></th></tr></thead><tbody id="rq-rows"></tbody></table></div>
-
-      <h2 style="margin-top:40px"><span class="tr">🛠 Bakım Modu</span><span class="en">🛠 Maintenance Mode</span></h2>
-      <p style="color:#888;font-size:13px"><span class="tr">Açıkken normal ziyaretçiler siteyi göremez, ekranda "BAKIMDAYIZ!" yazar. Yetkililer (editor, admin, owner) siteyi görmeye devam eder. Sadece owner kullanabilir.</span><span class="en">While on, regular visitors cannot see the site and get a "UNDER MAINTENANCE!" screen. Staff (editor, admin, owner) can still see it. Owner only.</span></p>
-      <div id="mt-status" class="msg"></div>
-      <label style="color:#aaa;font-size:13px"><span class="tr">Tahmini açılış saati (isteğe bağlı)</span><span class="en">Estimated reopening time (optional)</span></label>
-      <input type="time" id="mt-time" style="max-width:180px">
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn" id="mt-on"><span class="tr">BAKIMI AÇ / SAATİ GÜNCELLE</span><span class="en">TURN ON / UPDATE TIME</span></button>
-        <button class="btn gray" id="mt-off"><span class="tr">BAKIMI KAPAT</span><span class="en">TURN OFF</span></button>
+      <div class="sec">
+        <h2><span class="tr">Yayındaki Duyurular</span><span class="en">Published Announcements</span></h2>
+        <div class="wrap-x"><table><thead><tr><th><span class="tr">Tarih</span><span class="en">Date</span></th><th><span class="tr">Başlık</span><span class="en">Title</span></th><th><span class="tr">Yazan</span><span class="en">Posted by</span></th><th></th></tr></thead><tbody id="a-rows"></tbody></table></div>
       </div>
-      <div id="mt-msg"></div>
-    </div>
+    </section>
+
+    <!-- ========== YETKİLER (admin + owner) ========== -->
+    <section class="tabpane" id="pane-roles">
+      <div class="sec">
+        <h2><span class="tr">Hesap Yetkileri</span><span class="en">Account Roles</span></h2>
+        <p style="color:#888;font-size:13px">
+          <b>user</b>: <span class="tr">yetkisiz</span><span class="en">no access</span> &nbsp;•&nbsp;
+          <b>editor</b>: <span class="tr">sadece duyuru</span><span class="en">announcements only</span> &nbsp;•&nbsp;
+          <b>admin</b>: <span class="tr">duyuru + site içeriği + yetki verme</span><span class="en">announcements + site content + roles</span> &nbsp;•&nbsp;
+          <b>owner</b>: <span class="tr">en üst, kimse değiştiremez</span><span class="en">top level, nobody can change it</span>
+        </p>
+        <p style="color:#ff6666;font-size:13px"><span class="tr">Editor veya admin yaparken kişinin ismi ve yaşı zorunludur (yaş sadece sayı, 10-99).</span><span class="en">Name and age are required when setting editor or admin (age: digits only, 10-99).</span></p>
+        <p style="color:#888;font-size:13px"><span class="tr">🔐 Bir admin birinin rolünü değiştirmek istediğinde (user'a düşürmek dahil) <b>owner onayı</b> gerekir; talep owner'a gider. Owner bazı adminleri onaysız yetki verebilecek şekilde işaretleyebilir (bu işareti sadece owner görür).</span><span class="en">🔐 When an admin wants to change someone's role (including demoting to user), <b>owner approval</b> is required; the request goes to the owner. The owner can mark some admins to grant roles without approval (only the owner can see this mark).</span></p>
+        <div id="u-msg"></div>
+        <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">İsim</span><span class="en">Name</span></th><th><span class="tr">Yaş</span><span class="en">Age</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th id="th-trusted" style="display:none"><span class="tr">Güvenilir</span><span class="en">Trusted</span></th><th></th></tr></thead><tbody id="u-rows"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ========== ONAYLAR (owner) ========== -->
+    <section class="tabpane" id="pane-appr">
+      <div class="sec">
+        <h2><span class="tr">Rol Talepleri</span><span class="en">Role Requests</span> <span id="lr-count" style="color:#cc0000"></span></h2>
+        <p style="color:#888;font-size:13px"><span class="tr">Onaysız yetkisi olmayan adminlerin rol değiştirme talepleri (user'a düşürmek dahil) burada bekler. Onayladığında rol değişir.</span><span class="en">Role-change requests from admins without the no-approval mark (including demotions to user) wait here. When you approve, the role changes.</span></p>
+        <div id="lr-msg"></div>
+        <div class="wrap-x"><table><thead><tr><th><span class="tr">Kişi</span><span class="en">Person</span></th><th><span class="tr">Rol</span><span class="en">Role</span></th><th><span class="tr">İsteyen admin</span><span class="en">Requested by</span></th><th><span class="tr">İsim • Yaş</span><span class="en">Name • Age</span></th><th></th></tr></thead><tbody id="lr-rows"></tbody></table></div>
+      </div>
+      <div class="sec">
+        <h2><span class="tr">İsim / Yaş Değişiklik Talepleri</span><span class="en">Name / Age Change Requests</span> <span id="rq-count" style="color:#cc0000"></span></h2>
+        <p style="color:#888;font-size:13px"><span class="tr">Yetkililer isim ve yaşlarını bir kez ayarladıktan sonra değiştirmek için senden onay ister. Onayladığında yeni isim ve yaş geçerli olur.</span><span class="en">Once staff have set their name and age, they need your approval to change them. When you approve, the new name and age take effect.</span></p>
+        <div id="rq-msg"></div>
+        <div class="wrap-x"><table><thead><tr><th>Email</th><th><span class="tr">Mevcut</span><span class="en">Current</span></th><th><span class="tr">İstenen</span><span class="en">Requested</span></th><th></th></tr></thead><tbody id="rq-rows"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ========== SİTE AYARLARI (owner) ========== -->
+    <section class="tabpane" id="pane-site">
+      <div class="sec">
+        <h2><span class="tr">🛠 Bakım Modu</span><span class="en">🛠 Maintenance Mode</span></h2>
+        <p style="color:#888;font-size:13px"><span class="tr">Açıkken normal ziyaretçiler siteyi göremez, ekranda "BAKIMDAYIZ!" yazar. Yetkililer (editor, admin, owner) siteyi görmeye devam eder.</span><span class="en">While on, regular visitors cannot see the site and get a "UNDER MAINTENANCE!" screen. Staff (editor, admin, owner) can still see it.</span></p>
+        <div id="mt-status" class="msg"></div>
+        <label style="color:#aaa;font-size:13px"><span class="tr">Tahmini açılış saati (isteğe bağlı)</span><span class="en">Estimated reopening time (optional)</span></label>
+        <input type="time" id="mt-time" style="max-width:180px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="mt-on"><span class="tr">BAKIMI AÇ / SAATİ GÜNCELLE</span><span class="en">TURN ON / UPDATE TIME</span></button>
+          <button class="btn gray" id="mt-off"><span class="tr">BAKIMI KAPAT</span><span class="en">TURN OFF</span></button>
+        </div>
+        <div id="mt-msg"></div>
+      </div>
+      <div class="sec">
+        <h2><span class="tr">✎ İletişim Bilgileri</span><span class="en">✎ Contact Info</span></h2>
+        <p style="color:#888;font-size:13px"><span class="tr">Instagram, YouTube, Website, Discord, TruckersMP linki ve e-postayı değiştirmek için sitenin <b>sağ altındaki kırmızı kalem butonunu</b> kullan. Değişiklik tüm sitede kendiliğinden güncellenir.</span><span class="en">To change the Instagram, YouTube, Website, Discord, TruckersMP link and email, use the <b>red pen button at the bottom right</b> of the site. The change updates across the whole site automatically.</span></p>
+      </div>
+    </section>
+
+    <!-- ========== PROFİLİM ========== -->
+    <section class="tabpane" id="pane-me">
+      <div class="sec">
+        <h2><span class="tr">Profilim</span><span class="en">My Profile</span></h2>
+        <p style="color:#888;font-size:13px"><span class="tr">Duyuru atarken panelde adın bu şekilde görünür (isim • yaş). Ziyaretçiler görmez.</span><span class="en">When you post an announcement, your name appears like this in the panel (name • age). Visitors cannot see it.</span></p>
+        <div id="p-info"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+          <input id="p-name" maxlength="40" style="flex:2;min-width:160px" data-ph-tr="İsim" data-ph-en="Name">
+          <input id="p-age" maxlength="2" inputmode="numeric" style="flex:1;min-width:90px;max-width:120px" data-ph-tr="Yaş" data-ph-en="Age">
+          <button class="btn" id="p-save" style="margin-top:6px"><span class="tr">KAYDET</span><span class="en">SAVE</span></button>
+        </div>
+        <div id="p-msg"></div>
+      </div>
+      <p style="color:#888;font-size:13px"><span class="tr">İpucu: Admin/owner olarak giriş yapınca Management, Gallery ve Partnership sayfalarında "Yeni Ekle" kutusu görünür; kartların üzerine gelince düzenle/sil işaretleri çıkar.</span><span class="en">Tip: when logged in as admin/owner, an "Add" box appears on the Management, Gallery and Partnership pages; hover over cards to see edit/delete icons.</span></p>
+    </section>
   </div>
 </div>
 <script type="module">
@@ -117,9 +151,9 @@ const drop=makeDrop($('a-drop'),1000);
 digits($('p-age'));
 
 // Canlı güncelleme: yeni duyuru / yeni hesap / rol değişikliği olunca liste kendiliğinden yenilenir
-let unsubL=null,unsubM=null,myRoleReqs=new Map(),roleReqDocs=[];
+let unsubL=null,unsubM=null,unsubT=null,myRoleReqs=new Map(),roleReqDocs=[],trustedSet=new Set();
 let unsubA=null,unsubU=null,unsubP=null,unsubR=null,unsubQ=null,freshA=new Set(),freshU=new Set(),firstA=true,firstU=true,myReq=null,reqDocs=[];
-function stopLive(){[unsubA,unsubU,unsubP,unsubR,unsubQ,unsubL,unsubM].forEach(f=>f&&f());unsubA=unsubU=unsubP=unsubR=unsubQ=unsubL=unsubM=null;firstA=firstU=true;}
+function stopLive(){[unsubA,unsubU,unsubP,unsubR,unsubQ,unsubL,unsubM,unsubT].forEach(f=>f&&f());unsubA=unsubU=unsubP=unsubR=unsubQ=unsubL=unsubM=unsubT=null;firstA=firstU=true;}
 
 watchRole((role,user)=>{
   if(!user){stopLive();show('need-login');return;}
@@ -127,11 +161,33 @@ watchRole((role,user)=>{
   if(!isStaffRole(role)){stopLive();$('who2').textContent=user.email;show('no-access');return;}
   $('who').textContent=user.email+' ('+role+')';
   show('panel');startProfile();startAnn();
-  if(isAdminRole(role)){$('admin-only').style.display='block';startUsers();if(role!=='owner')startMyRoleReqs();}
-  $('owner-only').style.display=role==='owner'?'block':'none';
+  // Hangi sekmeler görünsün: editor -> Duyurular + Profilim; admin -> + Yetkiler; owner -> + Onaylar + Site Ayarları
+  $('tb-roles').style.display=isAdminRole(role)?'':'none';
+  $('tb-appr').style.display=role==='owner'?'':'none';
+  $('tb-site').style.display=role==='owner'?'':'none';
+  $('th-trusted').style.display=role==='owner'?'':'none';
   $('popup-only').style.display=role==='owner'?'block':'none';
-  if(role==='owner'){startMt();startReq();startPp();startRoleReq();}
+  if(isAdminRole(role)){startUsers();if(role!=='owner')startMyRoleReqs();}
+  if(role==='owner'){startMt();startReq();startPp();startRoleReq();startTrusted();}
+  let t='ann';try{t=sessionStorage.getItem('ptab')||'ann';}catch(e){}
+  showTab(t);
 });
+
+// ---- Sekmeler ----
+const TABS=['ann','roles','appr','site','me'];
+function showTab(t){
+  const btn=document.querySelector('.tabbtn[data-tab="'+t+'"]');
+  if(!btn||btn.style.display==='none')t='ann';
+  TABS.forEach(x=>{$('pane-'+x).style.display=x===t?'block':'none';});
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  try{sessionStorage.setItem('ptab',t);}catch(e){}
+}
+document.querySelectorAll('.tabbtn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+// Onaylar sekmesindeki bekleyen talep sayısı (rol + isim/yaş)
+function updateBadge(){
+  const n=roleReqDocs.filter(d=>d.data().status==='pending').length+reqDocs.filter(d=>d.data().status==='pending').length;
+  $('appr-badge').textContent=n?String(n):'';
+}
 
 // ---- Profilim ----
 // İsim/yaş bir kez ayarlandıktan sonra kilitlenir; değiştirmek için owner onayı (talep) gerekir. Owner doğrudan değiştirebilir.
@@ -191,6 +247,7 @@ function renderReq(){
   const people=new Map(userDocs.map(d=>[d.id,d.data()]));
   const pend=reqDocs.filter(d=>d.data().status==='pending');
   $('rq-count').textContent=pend.length?'('+pend.length+')':'';
+  updateBadge();
   pend.forEach(d=>{const r=d.data(),u=people.get(d.id)||{},tr=document.createElement('tr');
     cell(tr,u.email||d.id);cell(tr,label(u));cell(tr,r.name+' • '+r.age);
     const td=document.createElement('td');td.style.whiteSpace='nowrap';
@@ -277,6 +334,10 @@ function startUsers(){
     firstU=false;userDocs=snap.docs;renderUsers();renderAnn();renderReq();renderRoleReq();
   },e=>console.error(e));
 }
+function startTrusted(){ // güvenilir adminler listesi (sadece owner okuyabilir)
+  if(unsubT)return;
+  unsubT=onSnapshot(collection(db,'trustedAdmins'),snap=>{trustedSet=new Set(snap.docs.map(d=>d.id));renderUsers();},e=>console.error(e));
+}
 function startMyRoleReqs(){ // güvenilir olmayan admin: kendi gönderdiği talepleri görür
   if(unsubM)return;
   unsubM=onSnapshot(query(collection(db,'roleRequests'),where('requestedBy','==',me.uid)),snap=>{
@@ -285,22 +346,22 @@ function startMyRoleReqs(){ // güvenilir olmayan admin: kendi gönderdiği tale
 }
 function renderUsers(){
   const tb=$('u-rows');tb.innerHTML='';
-  const trustedMe=myRole==='owner'||!!myProf.trusted;
   const docs=userDocs.slice().sort((x,y)=>String(x.data().email||'').localeCompare(String(y.data().email||'')));
   docs.forEach(d=>{const u=d.data(),tr=document.createElement('tr');
     if(freshU.has(d.id))tr.className='fresh';
     cell(tr,u.email);
     const tdN=document.createElement('td'),tdA=document.createElement('td'),tdR=document.createElement('td'),tdT=document.createElement('td'),tdS=document.createElement('td');
-    if(u.role==='admin'){ // güvenilir admin işareti (sadece owner değiştirir)
-      if(myRole==='owner'&&d.id!==me.uid){
-        const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!u.trusted;cb.style.cssText='width:auto;margin:0;cursor:pointer';
-        cb.title=T('Açıksa bu admin birini editor/admin yaparken owner onayı gerekmez.','If on, this admin does not need owner approval to make someone editor/admin.');
-        cb.onchange=async()=>{
-          try{await updateDoc(doc(db,"users",d.id),{trusted:cb.checked});note($('u-msg'),T('Kaydedildi.','Saved.'));}
-          catch(e){cb.checked=!cb.checked;note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
-        };
-        tdT.append(cb);
-      }else tdT.textContent=u.trusted?'✔':'—';
+    if(myRole==='owner'&&u.role==='admin'&&d.id!==me.uid){ // güvenilir admin işareti (sadece owner görür ve değiştirir)
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=trustedSet.has(d.id);cb.style.cssText='width:auto;margin:0;cursor:pointer';
+      cb.title=T('Açıksa bu admin rol değiştirirken owner onayı gerekmez.','If on, this admin does not need owner approval to change roles.');
+      cb.onchange=async()=>{
+        try{
+          if(cb.checked)await setDoc(doc(db,'trustedAdmins',d.id),{at:serverTimestamp()});
+          else await deleteDoc(doc(db,'trustedAdmins',d.id));
+          note($('u-msg'),T('Kaydedildi.','Saved.'));
+        }catch(e){cb.checked=!cb.checked;note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
+      };
+      tdT.append(cb);
     }
     if(u.role==='owner'||d.id===me.uid){
       tdN.textContent=u.name||'—';tdA.textContent=u.age??'—';
@@ -329,21 +390,23 @@ function renderUsers(){
         const role=sel.value,n=nameIn.value.trim(),a=ageIn.value;
         const need=role!=='user';
         if((need&&(!n||!okAge(a)))||(a&&!okAge(a))){note($('u-msg'),T('Editor/admin için isim ve yaş (10-99, sadece sayı) gerekli.','Name and age (10-99, digits only) are required for editor/admin.'),true);return;}
-        const promote=(role==='editor'||role==='admin')&&role!==u.role;
+        const data={role};if(n)data.name=n;if(a)data.age=parseInt(a,10);
+        const sendRequest=async()=>{ // owner onayı gerekir: talep gönder
+          const rd={role,requestedBy:me.uid,status:'pending',createdAt:serverTimestamp()};
+          if(n)rd.name=n;if(a)rd.age=parseInt(a,10);
+          await setDoc(doc(db,'roleRequests',d.id),rd);
+          delete pending[d.id];
+          note($('u-msg'),T('Talep owner onayına gönderildi.','Request sent for owner approval.'));
+        };
         try{
-          if(promote&&!trustedMe){ // owner onayı gerekir: talep gönder
-            const rd={role,requestedBy:me.uid,status:'pending',createdAt:serverTimestamp()};
-            if(n)rd.name=n;if(a)rd.age=parseInt(a,10);
-            await setDoc(doc(db,'roleRequests',d.id),rd);
-            delete pending[d.id];
-            note($('u-msg'),T('Talep owner onayına gönderildi.','Request sent for owner approval.'));
-          }else{
-            const data={role};if(n)data.name=n;if(a)data.age=parseInt(a,10);
-            if(myRole==='owner'&&role!=='admin'&&u.trusted)data.trusted=false; // admin olmaktan çıkan kişide güvenilir işareti kalkar
-            await updateDoc(doc(db,"users",d.id),data);delete pending[d.id];
-            note($('u-msg'),T('Kaydedildi.','Saved.'));
-          }
-        }catch(e){note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
+          await updateDoc(doc(db,"users",d.id),data); // owner ve onaysız yetkisi olan adminler için doğrudan geçer
+          if(myRole==='owner'&&role!=='admin'&&trustedSet.has(d.id))await deleteDoc(doc(db,'trustedAdmins',d.id)); // admin olmaktan çıkan kişide işaret kalkar
+          delete pending[d.id];note($('u-msg'),T('Kaydedildi.','Saved.'));
+        }catch(e){
+          if(myRole!=='owner'&&role!==u.role&&e&&e.code==='permission-denied'){
+            try{await sendRequest();}catch(e2){note($('u-msg'),T('Talep gönderilemedi.','Could not send the request.'),true);console.error(e2);}
+          }else{note($('u-msg'),T('Bu değişikliği yapma yetkin yok.','You cannot make this change.'),true);console.error(e);}
+        }
       };
       const rq=myRoleReqs.get(d.id);
       if(rq&&rq.status==='pending'){
@@ -356,7 +419,8 @@ function renderUsers(){
         tdS.append(w,c,b);
       }else tdS.append(b);
     }
-    tr.append(tdN,tdA,tdR,tdT,tdS);tb.append(tr);});
+    if(myRole==='owner')tr.append(tdN,tdA,tdR,tdT,tdS);else tr.append(tdN,tdA,tdR,tdS);
+    tb.append(tr);});
   freshU.clear();
 }
 
@@ -370,6 +434,7 @@ function renderRoleReq(){
   const people=new Map(userDocs.map(d=>[d.id,d.data()]));
   const pend=roleReqDocs.filter(d=>d.data().status==='pending');
   $('lr-count').textContent=pend.length?'('+pend.length+')':'';
+  updateBadge();
   pend.forEach(d=>{const r=d.data(),t=people.get(d.id)||{},by=people.get(r.requestedBy)||{},tr=document.createElement('tr');
     cell(tr,t.email||d.id);cell(tr,(t.role||'user')+' → '+r.role);cell(tr,by.email||r.requestedBy);
     cell(tr,r.name?(r.name+(r.age?' • '+r.age:'')):label(t));
@@ -377,7 +442,9 @@ function renderRoleReq(){
     const ok=document.createElement('button');ok.className='btn small';ok.innerHTML=bi('Onayla','Approve');
     ok.onclick=async()=>{
       try{const data={role:r.role};if(r.name)data.name=r.name;if(r.age)data.age=r.age;
-        await updateDoc(doc(db,'users',d.id),data);await deleteDoc(doc(db,'roleRequests',d.id));
+        await updateDoc(doc(db,'users',d.id),data);
+        if(r.role!=='admin'&&trustedSet.has(d.id))await deleteDoc(doc(db,'trustedAdmins',d.id));
+        await deleteDoc(doc(db,'roleRequests',d.id));
         note($('lr-msg'),T('Onaylandı, rol verildi.','Approved, role granted.'));}
       catch(e){note($('lr-msg'),T('İşlem yapılamadı.','Action failed.'),true);console.error(e);}
     };
